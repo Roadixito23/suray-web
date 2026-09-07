@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -16,16 +17,29 @@ TIPO_DIA_POR_COLECCION = {
     "domingosFeriados": Horario.TipoDia.DOMINGO_FERIADO,
 }
 
+# Default pensado para "Execute python script" de cPanel, que no pasa bien
+# argumentos extra al comando — con esto alcanza con "manage.py cargar_horarios"
+# sin argumentos. Se puede sobrescribir con la variable de entorno
+# FIRESTORE_EXPORT_PATH o pasando la ruta explicitamente.
+DEFAULT_JSON_PATH = os.environ.get(
+    "FIRESTORE_EXPORT_PATH", "/home/suraycl1/suray_firestore_export.json"
+)
+
 
 class Command(BaseCommand):
     help = "Carga horarios y feriados reales desde un export JSON de Firestore (suray_firestore_export.json)."
 
     def add_arguments(self, parser):
-        parser.add_argument("json_path", type=str, help="Ruta al archivo de export JSON de Firestore.")
         parser.add_argument(
-            "--reemplazar",
-            action="store_true",
-            help="Borra los Horario y Feriado existentes antes de cargar los nuevos.",
+            "json_path", type=str, nargs="?", default=DEFAULT_JSON_PATH,
+            help="Ruta al archivo de export JSON de Firestore (por defecto: %(default)s).",
+        )
+        parser.add_argument(
+            "--no-reemplazar",
+            action="store_false",
+            dest="reemplazar",
+            default=True,
+            help="No borrar los Horario/Feriado existentes antes de cargar (por defecto SI se borran/reemplazan).",
         )
 
     def handle(self, *args, **options):
