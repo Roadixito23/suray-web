@@ -4,12 +4,49 @@ Pasos manuales para desplegar `suray_web` en el hosting cPanel (tema Jupiter, Py
 vía Passenger/WSGI). No automatizables desde el código — se ejecutan directamente en el
 panel o por SSH/Terminal de cPanel.
 
+## 0. Subir el código con Git
+
+El repo local ya existe (`git log` tiene el commit inicial). Como el DNS de `suray.cl`
+aún no apunta a este hosting, cPanel debería ser accesible igual por su URL temporal
+(algo como `https://<servidor>.tuhosting.cl:2083` o la que te haya dado el proveedor) —
+usa esa para entrar mientras tanto.
+
+1. **Generar y agregar una llave SSH** (si no tienes una ya asociada a la cuenta de cPanel):
+   - cPanel → **SSH Access** → "Manage SSH Keys" → "Generate a New Key" (o importa una que
+     ya tengas localmente). Autoriza la llave ("Manage Keys" → Authorize).
+   - Si la generas ahí, descarga la privada o copia la pública a tu máquina local para
+     poder hacer `git push` desde acá.
+2. **Crear el repositorio en cPanel**: cPanel → **Git Version Control** → "Create":
+   - Clone URL: déjalo vacío (repo nuevo, no clonado de otro lado).
+   - Repository Path: la ruta donde luego vivirá la app, ej. `/home/<usuario>/suray_web`.
+   - Repository Name: `suray_web`.
+3. cPanel te muestra una **Clone URL** tipo `ssh://<usuario>@<servidor>:<puerto>/home/<usuario>/suray_web.git`.
+   Agrégala como remoto local y sube el código:
+   ```
+   git remote add cpanel ssh://<usuario>@<servidor>:<puerto>/home/<usuario>/suray_web.git
+   git push cpanel master
+   ```
+4. En cPanel → Git Version Control → tu repo → **"Manage"** → pestaña **"Pull or Deploy"**
+   → "Update from Remote" (si hiciste el push) o simplemente ya queda desplegado el working
+   copy en la Repository Path, según la versión de cPanel.
+
+Si tu plan de hosting no incluye SSH Access ni Git Version Control (algunos planes
+compartidos básicos no lo traen), usa en su lugar **File Manager**: comprime el proyecto
+local en un `.zip` (excluyendo `venv/`, `_legacy_reference/`, `db.sqlite3`, `staticfiles/`
+— ya están en `.gitignore`, así que `git archive` es la forma más limpia de generarlo:
+`git archive -o suray_web.zip HEAD`), súbelo por File Manager a la ruta de la app, y
+descomprímelo ahí. Pierdes el `git pull` para actualizaciones futuras, pero funciona igual.
+
 ## 1. Crear la app Python en cPanel
 
 1. cPanel → **Setup Python App** → Create Application.
 2. Python version: 3.12 (la más cercana disponible a la usada en desarrollo).
-3. Application root: el directorio donde subiste este proyecto (ej. `suray_web`).
-4. Application URL: `suray.cl` (dominio raíz).
+3. Application root: la misma Repository Path del paso 0 (ej. `suray_web`).
+4. Application URL: `suray.cl` (dominio raíz). El dominio debe existir en la cuenta de
+   cPanel (como principal, addon o parked) aunque el DNS público todavía no apunte acá —
+   mientras tanto, prueba con la URL temporal que cPanel asigna a la app, o agrega una
+   entrada en el archivo `hosts` de tu máquina apuntando `suray.cl` a la IP del servidor
+   solo para probar antes de cambiar el DNS real.
 5. Application startup file: `passenger_wsgi.py` (ya está en la raíz del proyecto).
 6. Application Entry point: `application` (la variable que exporta `passenger_wsgi.py`).
 
@@ -92,6 +129,19 @@ y no debe reutilizarse en producción).
 - Confirmar en phpMyAdmin que las tablas de `sitio` se crearon y que el uso de disco
   sigue dentro del límite del plan (10 GB).
 - Configurar backup periódico (JetBackup 5) para la base de datos y el código.
+
+## 9. Apuntar el DNS real de suray.cl
+
+Una vez que todo lo anterior está probado (vía URL temporal o el `hosts` local):
+
+1. En el proveedor donde está registrado el dominio `suray.cl`, cambia los registros
+   (A/AAAA o los NS, según cómo esté delegado hoy) para que apunten a este hosting cPanel
+   en vez de a Firebase Hosting.
+2. Espera la propagación (puede tardar desde minutos hasta ~24-48h).
+3. Una vez propagado, activa el certificado SSL en cPanel (AutoSSL suele encargarse solo
+   si el dominio ya resuelve hacia el servidor) y confirma que `SECURE_SSL_REDIRECT` no
+   esté forzado en `False` en las variables de entorno.
+4. Revierte cualquier entrada de prueba que hayas dejado en el `hosts` local.
 
 ## Notas
 
