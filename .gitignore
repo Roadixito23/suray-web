@@ -1,0 +1,10 @@
+.env
+db.sqlite3
+__pycache__/
+*.pyc
+venv/
+staticfiles/
+media/
+
+# Solo referencia de lectura del repo Flutter original, nunca se commitea aqui.
+_legacy_reference/

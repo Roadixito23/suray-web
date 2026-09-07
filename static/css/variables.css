@@ -1,0 +1,59 @@
+/* Paleta extraída de main.dart (ver inventario_contenido.md, seccion 4) */
+:root {
+  --color-primary-navy: #001959;
+  --color-primary-orange: #F47200;
+  --color-light-navy: #1E3A8A;
+  --color-deep-orange: #E65100;
+  --color-soft-orange: #FFA726;
+  --color-accent-blue: #3B82F6;
+  --color-bg-light: #F8FAFC;
+  --color-surface-white: #FFFFFF;
+  --color-text-dark: #1E293B;
+  --color-text-light: #64748B;
+  --color-border: #E2E8F0;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+
+  --color-weekday-mint: #06D6A0;
+  --color-weekday-mint-dark: #05B287;
+  --color-saturday-orange: #FFB703;
+  --color-saturday-orange-dark: #FB8500;
+  --color-sunday-red: #EF476F;
+  --color-sunday-red-dark: #D62246;
+
+  --color-footer-beige: #D4CFC4;
+  --color-facebook-blue: #1877F2;
+  --color-chip-hoy: #1E88E5;
+  --color-chip-manana: #AB47BC;
+  --color-chip-manana-dark: #6A1B9A;
+
+  /* Roles semanticos (se remapean en modo oscuro) */
+  --bg-page: var(--color-bg-light);
+  --bg-surface: var(--color-surface-white);
+  --bg-nav: var(--color-primary-navy);
+  --text-body: var(--color-text-dark);
+  --text-muted: var(--color-text-light);
+  --border-color: var(--color-border);
+}
+
+[data-theme="dark"] {
+  --color-dark-bg-1: #0A1628;
+  --color-dark-bg-2: #112240;
+  --color-dark-bg-3: #1A3050;
+
+  --bg-page: var(--color-dark-bg-1);
+  --bg-surface: var(--color-dark-bg-2);
+  --bg-nav: var(--color-dark-bg-1);
+  --text-body: #F1F5F9;
+  --text-muted: #94A3B8;
+  --border-color: var(--color-dark-bg-3);
+}
+
+@font-face {
+  font-family: 'Hemiheads';
+  src: url('../fonts/Hemiheads.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruta | Buses Suray</title>
+<link rel="stylesheet" href="../static/css/variables.css">
+<link rel="stylesheet" href="../static/css/base.css">
+<link rel="stylesheet" href="../static/css/ruta.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container">
+    <a class="site-nav__brand" href="inicio.html"><img src="../static/img/logo.png" alt="Buses Suray"></a>
+    <ul class="site-nav__links">
+      <li><a href="inicio.html">Inicio</a></li>
+      <li><a href="horarios.html">Horarios</a></li>
+      <li><a href="ruta.html" class="is-active">Ruta</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="map-wrap">
+    <span class="map-title">Ruta Buses Suray</span>
+    <div class="map-quick-btns">
+      <button class="quick-btn quick-btn--ays" type="button">AYS</button>
+      <button class="quick-btn quick-btn--coy" type="button">COY</button>
+    </div>
+
+    <!-- Mapa estático (decision checkpoint 1, #4): esquema simplificado ruta 240
+         entre Puerto Aysén y Coyhaique, sin Google Maps JS ni API key. -->
+    <svg class="static-map" viewBox="0 0 800 360" role="img" aria-label="Mapa esquemático de la ruta entre Puerto Aysén y Coyhaique">
+      <path d="M 120 260 C 260 220, 340 120, 420 100 S 620 90, 680 110"
+            fill="none" stroke="#F47200" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+      <circle cx="120" cy="260" r="10" fill="#001959"/>
+      <circle cx="120" cy="260" r="4" fill="#fff"/>
+      <text x="140" y="255" class="map-pin-label">Puerto Aysén</text>
+
+      <circle cx="680" cy="110" r="10" fill="#3B82F6"/>
+      <circle cx="680" cy="110" r="4" fill="#fff"/>
+      <text x="620" y="95" class="map-pin-label">Coyhaique</text>
+    </svg>
+  </div>
+
+  <div class="terminal-cards">
+    <section class="terminal-card">
+      <p class="eyebrow">Terminal</p>
+      <h3>Aysén Suray</h3>
+      <p>Eusebio Ibar 630, Puerto Aysén</p>
+      <a href="https://maps.app.goo.gl/1nv7mAcGRpFVPMacA" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+    </section>
+    <section class="terminal-card">
+      <p class="eyebrow">Terminal</p>
+      <h3>Coyhaique Suray</h3>
+      <p>Av. Norte Sur/Las Violetas, Terminal de Coyhaique, Of. N°2</p>
+      <a href="https://maps.app.goo.gl/9AJMknQmkmf3tHSo8" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__social">
+      <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <img src="../static/img/icono_instagram.png" alt="Instagram"> @buses.suray.cargo
+      </a>
+      <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <span class="icon-facebook">f</span> buses.suray.cargo
+      </a>
+    </div>
+    <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
+  </div>
+</footer>
+
+<script>
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  function applyTheme(t) {
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+  }
+  applyTheme(localStorage.getItem('suray-theme') || 'light');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('suray-theme', next);
+    applyTheme(next);
+  });
+</script>
+</body>
+</html>

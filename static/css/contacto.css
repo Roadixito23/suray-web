@@ -1,0 +1,75 @@
+.page-header { padding: 2rem 0 .5rem; }
+.page-header h1 { margin: 0 0 .5rem; color: var(--color-primary-navy); font-size: 1.9rem; }
+[data-theme="dark"] .page-header h1 { color: #fff; }
+.page-header p { color: var(--text-muted); max-width: 640px; margin: 0; }
+
+.city-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.75rem 0;
+}
+.city-panel {
+  border-radius: 16px;
+  overflow: hidden;
+  color: #fff;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.city-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(0,25,89,.92), rgba(0,25,89,.78));
+}
+.city-panel--coyhaique::before {
+  background: linear-gradient(160deg, rgba(59,130,246,.92), rgba(30,58,138,.85));
+}
+.city-panel__inner { position: relative; padding: 1.5rem; }
+.city-panel h2 { margin: 0 0 1rem; font-size: 1.3rem; }
+
+.tabs { display: flex; gap: .5rem; margin-bottom: 1.1rem; }
+.tab-btn {
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff;
+  padding: .35rem .8rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+}
+.tab-btn.is-active { background: #fff; color: var(--color-primary-navy); }
+
+.office-block { margin-bottom: 1rem; font-size: .85rem; }
+.office-block strong { display: block; margin-bottom: .2rem; }
+.office-block span { opacity: .9; }
+.office-block a { text-decoration: underline; }
+
+.hours-table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-top: .4rem; }
+.hours-table th, .hours-table td {
+  text-align: left;
+  padding: .3rem .1rem;
+  border-bottom: 1px solid rgba(255,255,255,.2);
+}
+
+.special-services {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+.special-services h3 { margin: 0 0 .5rem; color: var(--color-primary-navy); }
+[data-theme="dark"] .special-services h3 { color: #fff; }
+.special-services a {
+  display: inline-block;
+  margin-top: .75rem;
+  color: var(--color-primary-orange);
+  font-weight: 700;
+}
+
+@media (max-width: 780px) {
+  .city-panels { grid-template-columns: 1fr; }
+}

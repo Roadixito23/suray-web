@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Buses Suray | Suray Cargo{% endblock %}</title>
+<meta name="description" content="Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique. Información de horarios, teléfonos, direcciones, paraderos en ruta 240 y servicios especiales.">
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container">
+    <a class="site-nav__brand" href="{% url 'sitio:inicio' %}">
+      <img src="{% static 'img/logo.png' %}" alt="Buses Suray">
+    </a>
+    <ul class="site-nav__links">
+      <li><a href="{% url 'sitio:inicio' %}" {% if request.resolver_match.url_name == 'inicio' %}class="is-active"{% endif %}>Inicio</a></li>
+      <li><a href="{% url 'sitio:horarios' %}" {% if request.resolver_match.url_name == 'horarios' %}class="is-active"{% endif %}>Horarios</a></li>
+      <li><a href="{% url 'sitio:ruta' %}" {% if request.resolver_match.url_name == 'ruta' %}class="is-active"{% endif %}>Ruta</a></li>
+      <li><a href="{% url 'sitio:contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__social">
+      <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <img src="{% static 'img/icono_instagram.png' %}" alt="Instagram"> @buses.suray.cargo
+      </a>
+      <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <span class="icon-facebook">f</span> buses.suray.cargo
+      </a>
+    </div>
+    <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
+  </div>
+</footer>
+
+<script>
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  function applyTheme(t) {
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+  }
+  applyTheme(localStorage.getItem('suray-theme') || 'light');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('suray-theme', next);
+    applyTheme(next);
+  });
+
+  document.querySelector('.nav-toggle').addEventListener('click', function () {
+    document.querySelector('.site-nav').classList.toggle('is-open');
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,47 @@
+{% extends "sitio/base.html" %}
+{% load static %}
+
+{% block title %}Ruta | Buses Suray{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ruta.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container">
+  <div class="map-wrap">
+    <span class="map-title">Ruta Buses Suray</span>
+    <div class="map-quick-btns">
+      <button class="quick-btn quick-btn--ays" type="button">AYS</button>
+      <button class="quick-btn quick-btn--coy" type="button">COY</button>
+    </div>
+
+    <svg class="static-map" viewBox="0 0 800 360" role="img" aria-label="Mapa esquemático de la ruta entre Puerto Aysén y Coyhaique">
+      <path d="M 120 260 C 260 220, 340 120, 420 100 S 620 90, 680 110"
+            fill="none" stroke="#F47200" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+      <circle cx="120" cy="260" r="10" fill="#001959"/>
+      <circle cx="120" cy="260" r="4" fill="#fff"/>
+      <text x="140" y="255" class="map-pin-label">Puerto Aysén</text>
+
+      <circle cx="680" cy="110" r="10" fill="#3B82F6"/>
+      <circle cx="680" cy="110" r="4" fill="#fff"/>
+      <text x="620" y="95" class="map-pin-label">Coyhaique</text>
+    </svg>
+  </div>
+
+  <div class="terminal-cards">
+    <section class="terminal-card">
+      <p class="eyebrow">Terminal</p>
+      <h3>Aysén Suray</h3>
+      <p>Eusebio Ibar 630, Puerto Aysén</p>
+      <a href="https://maps.app.goo.gl/1nv7mAcGRpFVPMacA" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+    </section>
+    <section class="terminal-card">
+      <p class="eyebrow">Terminal</p>
+      <h3>Coyhaique Suray</h3>
+      <p>Av. Norte Sur/Las Violetas, Terminal de Coyhaique, Of. N°2</p>
+      <a href="https://maps.app.goo.gl/9AJMknQmkmf3tHSo8" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+    </section>
+  </div>
+</main>
+{% endblock %}

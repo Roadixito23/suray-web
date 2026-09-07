@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horarios | Buses Suray</title>
+<link rel="stylesheet" href="../static/css/variables.css">
+<link rel="stylesheet" href="../static/css/base.css">
+<link rel="stylesheet" href="../static/css/horarios.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container">
+    <a class="site-nav__brand" href="inicio.html"><img src="../static/img/logo.png" alt="Buses Suray"></a>
+    <ul class="site-nav__links">
+      <li><a href="inicio.html">Inicio</a></li>
+      <li><a href="horarios.html" class="is-active">Horarios</a></li>
+      <li><a href="ruta.html">Ruta</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="page-header">
+    <h1>Horarios</h1>
+    <button class="btn-outline" id="downloadBtn" type="button">⬇ Descargar horarios</button>
+  </div>
+
+  <div id="schedulesCapture">
+    <section class="day-card day-card--weekday">
+      <h2>Lunes a Viernes</h2>
+      <p class="day-card__subtitle">Salidas desde:</p>
+
+      <div class="city-block">
+        <h3>Puerto Aysén</h3>
+        <div class="time-list">
+          <span class="time-pill">06:30</span>
+          <span class="time-pill">09:00</span>
+          <span class="time-pill">12:30</span>
+          <span class="time-pill">17:00</span>
+          <span class="time-pill">19:00</span>
+        </div>
+      </div>
+      <div class="city-block">
+        <h3>Coyhaique</h3>
+        <div class="time-list">
+          <span class="time-pill">07:00</span>
+          <span class="time-pill">10:00</span>
+          <span class="time-pill">13:30</span>
+          <span class="time-pill">18:00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="day-card day-card--saturday">
+      <h2>Sábados</h2>
+      <p class="day-card__subtitle">Salidas desde:</p>
+
+      <div class="city-block">
+        <h3>Puerto Aysén</h3>
+        <div class="time-list">
+          <span class="time-pill">08:00</span>
+          <span class="time-pill">13:00</span>
+          <span class="time-pill">19:00</span>
+        </div>
+      </div>
+      <div class="city-block">
+        <h3>Coyhaique</h3>
+        <div class="time-list">
+          <span class="time-pill">08:00</span>
+          <span class="time-pill">14:00</span>
+          <span class="time-pill">19:00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="day-card day-card--sunday">
+      <span class="special-badge">HORARIO ESPECIAL</span>
+      <h2>Domingo o Feriado</h2>
+      <p class="day-card__subtitle">Salidas desde:</p>
+
+      <div class="city-block">
+        <h3>Puerto Aysén</h3>
+        <div class="time-list">
+          <span class="time-pill">08:00</span>
+          <span class="time-pill">13:30</span>
+          <span class="time-pill">16:30</span>
+        </div>
+      </div>
+      <div class="city-block">
+        <h3>Coyhaique</h3>
+        <p class="empty-state">Sin servicio<br>por feriado</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__social">
+      <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <img src="../static/img/icono_instagram.png" alt="Instagram"> @buses.suray.cargo
+      </a>
+      <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <span class="icon-facebook">f</span> buses.suray.cargo
+      </a>
+    </div>
+    <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  function applyTheme(t) {
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+  }
+  applyTheme(localStorage.getItem('suray-theme') || 'light');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('suray-theme', next);
+    applyTheme(next);
+  });
+
+  // Replica schedule_image_generator.dart: exporta las tarjetas de horarios como PNG.
+  document.getElementById('downloadBtn').addEventListener('click', function () {
+    html2canvas(document.getElementById('schedulesCapture')).then(function (canvas) {
+      var now = new Date();
+      var fecha = now.toISOString().slice(0, 10);
+      var hora = now.toTimeString().slice(0, 5).replace(':', '');
+      var link = document.createElement('a');
+      link.download = 'horarios_suray_' + fecha + '_' + hora + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  });
+</script>
+</body>
+</html>

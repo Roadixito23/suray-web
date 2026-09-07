@@ -1,0 +1,83 @@
+{% extends "sitio/base.html" %}
+{% load static %}
+
+{% block title %}Contacto | Buses Suray{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contacto.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container">
+  <div class="page-header">
+    <h1>Ponte en Contacto</h1>
+    <p>Para consultar por horarios, información sobre encomiendas o servicios especiales, puedes usar los siguientes canales de comunicación:</p>
+  </div>
+
+  <div class="city-panels">
+    <section class="city-panel" style="background-image:url('{% static 'img/panel_aysen.png' %}')">
+      <div class="city-panel__inner">
+        <h2>Puerto Aysén</h2>
+        <div class="tabs">
+          <button class="tab-btn is-active" type="button">Ubícanos</button>
+          <button class="tab-btn" type="button">Horarios</button>
+        </div>
+
+        {% for oficina in oficinas_aysen %}
+        <div class="office-block">
+          <strong>{{ oficina.get_tipo_display }}</strong>
+          <span>{{ oficina.direccion }}</span><br>
+          <span>{{ oficina.telefono }}</span><br>
+          {% if oficina.mapa_url %}<a href="{{ oficina.mapa_url }}" target="_blank" rel="noopener">Ver en el mapa</a>{% endif %}
+        </div>
+        {% endfor %}
+
+        {% for oficina in oficinas_aysen %}
+        <strong style="font-size:.8rem; display:block; {% if not forloop.first %}margin-top:.8rem{% endif %}">{{ oficina.get_tipo_display }}</strong>
+        <table class="hours-table">
+          <tr><th>Día</th><th>Horario</th></tr>
+          {% for h in oficina.horarios.all %}
+          <tr><td>{{ h.dia }}</td><td>{{ h.horario }}</td></tr>
+          {% endfor %}
+        </table>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="city-panel city-panel--coyhaique" style="background-image:url('{% static 'img/panel_coyhaique.jpg' %}')">
+      <div class="city-panel__inner">
+        <h2>Coyhaique</h2>
+        <div class="tabs">
+          <button class="tab-btn is-active" type="button">Ubícanos</button>
+          <button class="tab-btn" type="button">Horarios</button>
+        </div>
+
+        {% for oficina in oficinas_coyhaique %}
+        <div class="office-block">
+          <strong>{{ oficina.get_tipo_display }}</strong>
+          <span>{{ oficina.direccion }}</span><br>
+          <span>{{ oficina.telefono }}</span><br>
+          {% if oficina.mapa_url %}<a href="{{ oficina.mapa_url }}" target="_blank" rel="noopener">Ver en el mapa</a>{% endif %}
+        </div>
+        {% endfor %}
+
+        {% for oficina in oficinas_coyhaique %}
+        <strong style="font-size:.8rem; display:block; {% if not forloop.first %}margin-top:.8rem{% endif %}">{{ oficina.get_tipo_display }}</strong>
+        <table class="hours-table">
+          <tr><th>Día</th><th>Horario</th></tr>
+          {% for h in oficina.horarios.all %}
+          <tr><td>{{ h.dia }}</td><td>{{ h.horario }}</td></tr>
+          {% endfor %}
+        </table>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="special-services">
+    <h3>Servicios Especiales</h3>
+    <p>¿Necesitas coordinar un servicio especial? Escríbenos directamente.</p>
+    <a href="mailto:suray.ltda@gmail.com?subject=Consulta desde suray.cl">suray.ltda@gmail.com</a>
+  </section>
+</main>
+{% endblock %}

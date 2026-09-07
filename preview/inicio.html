@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buses Suray | Suray Cargo</title>
+<meta name="description" content="Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique. Información de horarios, teléfonos, direcciones, paraderos en ruta 240 y servicios especiales.">
+<link rel="stylesheet" href="../static/css/variables.css">
+<link rel="stylesheet" href="../static/css/base.css">
+<link rel="stylesheet" href="../static/css/inicio.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container">
+    <a class="site-nav__brand" href="inicio.html">
+      <img src="../static/img/logo.png" alt="Buses Suray">
+    </a>
+    <ul class="site-nav__links">
+      <li><a href="inicio.html" class="is-active">Inicio</a></li>
+      <li><a href="horarios.html">Horarios</a></li>
+      <li><a href="ruta.html">Ruta</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero__slide"></div>
+  <div class="hero__slide"></div>
+  <div class="hero__content container">
+    <div class="hero__actions">
+      <a class="pill-btn" href="contacto.html">📍 Ubícanos</a>
+      <a class="pill-btn" href="ruta.html">🗺️ Ruta</a>
+    </div>
+    <a class="pill-btn pill-btn--primary" href="horarios.html">
+      <img src="../static/img/icono_bus_reloj.png" alt="">
+      TODOS LOS HORARIOS
+    </a>
+  </div>
+</header>
+
+<main class="container">
+  <section class="status-card">
+    <div class="status-card__today">
+      <img src="../static/img/icono_calendario_reloj.png" alt="">
+      <span id="todayLabel">Hoy es ...</span>
+    </div>
+
+    <h3>Próximas Salidas:</h3>
+    <div class="departures">
+      <div class="departure-col">
+        <h4>Desde Aysén</h4>
+        <div class="departure-item">
+          <span>Hoy a las 14:30 hrs.</span>
+          <span class="chip chip--hoy">HOY</span>
+        </div>
+        <div class="departure-item">
+          <span>Mañana a las 07:00 a.m.</span>
+          <span class="chip chip--manana">MAÑANA</span>
+        </div>
+        <span class="weather-chip">☀️ 12°C Puerto Aysén (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
+      </div>
+      <div class="departure-col">
+        <h4>Desde Coyhaique</h4>
+        <div class="departure-item">
+          <span>Hoy a las 16:00 hrs.</span>
+          <span class="chip chip--hoy">HOY</span>
+        </div>
+        <div class="departure-item">
+          <span>Mañana a las 08:30 a.m.</span>
+          <span class="chip chip--manana">MAÑANA</span>
+        </div>
+        <span class="weather-chip">⛅ 9°C Coyhaique (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__social">
+      <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <img src="../static/img/icono_instagram.png" alt="Instagram"> @buses.suray.cargo
+      </a>
+      <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
+        <span class="icon-facebook">f</span> buses.suray.cargo
+      </a>
+    </div>
+    <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
+  </div>
+</footer>
+
+<script>
+  // Replica el formato "Hoy es {DiaSemana} {dia} de {MES_ABREV}" / feriado del original.
+  var dias = ['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
+  var meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  var hoy = new Date();
+  var dia = dias[hoy.getDay()];
+  var diaCap = dia.charAt(0) + dia.slice(1).toLowerCase();
+  document.getElementById('todayLabel').textContent =
+    'Hoy es ' + diaCap + ' ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()];
+
+  // Toggle modo oscuro (decision checkpoint 1, #5 y #9: se replica y se deja disponible
+  // en todas las paginas via la nav unificada).
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  function applyTheme(t) {
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+  }
+  applyTheme(localStorage.getItem('suray-theme') || 'light');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('suray-theme', next);
+    applyTheme(next);
+  });
+</script>
+</body>
+</html>

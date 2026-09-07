@@ -1,0 +1,137 @@
+/* Hero con carrusel de fondo (panel_puente_aysen / panel_tunel), crossfade CSS puro */
+.hero {
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  animation: hero-crossfade 12s infinite;
+}
+.hero__slide:nth-child(1) { background-image: url('../img/panel_puente_aysen.png'); animation-delay: 0s; }
+.hero__slide:nth-child(2) { background-image: url('../img/panel_tunel.png'); animation-delay: 6s; }
+@keyframes hero-crossfade {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  46%  { opacity: 1; }
+  50%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,25,89,.88) 0%, rgba(0,25,89,.35) 55%, rgba(0,25,89,.15) 100%);
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2rem 1.25rem 2.5rem;
+  color: #fff;
+}
+.hero__actions {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.4);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 600;
+}
+.pill-btn--primary {
+  background: #000;
+  border-color: var(--color-primary-orange);
+  color: var(--color-primary-orange);
+  font-family: 'Hemiheads', system-ui, sans-serif;
+  font-size: 1.05rem;
+  padding: .75rem 1.5rem;
+  width: fit-content;
+}
+.pill-btn img { height: 18px; width: 18px; filter: brightness(0) invert(1); }
+
+/* Tarjeta "Hoy es..." + Proximas Salidas */
+.status-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  margin: -2.5rem 1.25rem 0;
+  padding: 1.5rem;
+  box-shadow: 0 12px 30px rgba(0,25,89,.15);
+  position: relative;
+  z-index: 2;
+}
+.status-card__today {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-weight: 700;
+  color: var(--color-primary-navy);
+  margin-bottom: 1.25rem;
+}
+.status-card__today img { height: 24px; width: 24px; }
+[data-theme="dark"] .status-card__today { color: #fff; }
+
+.status-card h3 {
+  font-size: 1.1rem;
+  color: var(--color-primary-navy);
+  margin: 0 0 1rem;
+}
+[data-theme="dark"] .status-card h3 { color: #fff; }
+
+.departures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.departure-col h4 {
+  margin: 0 0 .6rem;
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+}
+.departure-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-bottom: .5rem;
+  font-size: .85rem;
+}
+.chip {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .2rem .5rem;
+  border-radius: 999px;
+  color: #fff;
+}
+.chip--hoy { background: var(--color-chip-hoy); }
+.chip--manana { background: var(--color-chip-manana); }
+.weather-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .departures { grid-template-columns: 1fr; }
+  .hero { min-height: 380px; }
+}
