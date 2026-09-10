@@ -28,6 +28,10 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
+# Version mostrada en el footer: fecha (DD.MM.AA) + correlativo de actualizacion (01-99).
+# Actualizar manualmente aqui cada vez que se publique un cambio en el sitio.
+SITE_VERSION = '10.09.26-01'
+
 
 # Application definition
 
@@ -52,6 +56,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Recarga automatica del navegador en desarrollo (solo si DEBUG=True).
+if DEBUG:
+    INSTALLED_APPS.append('django_browser_reload')
+    MIDDLEWARE.append('django_browser_reload.middleware.BrowserReloadMiddleware')
+
 ROOT_URLCONF = 'suray_web.urls'
 
 TEMPLATES = [
@@ -64,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'sitio.context_processors.site_version',
             ],
         },
     },

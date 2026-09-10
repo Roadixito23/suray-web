@@ -1,0 +1,40 @@
+{% extends "admin/change_list.html" %}
+{% load admin_urls static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/css/horarios_admin.css' %}">
+{% endblock %}
+
+{% block result_list %}
+<div class="horarios-admin">
+  {% for grupo in grupos %}
+  <section class="horarios-admin__card horarios-admin__card--{{ grupo.slug }}">
+    <header class="horarios-admin__header">
+      <h2>{{ grupo.label }}</h2>
+      {% if grupo.tiene_especial %}<span class="horarios-admin__badge">Horario especial</span>{% endif %}
+    </header>
+    <table class="horarios-admin__table">
+      <thead>
+        <tr><th>Ruta</th><th>Hora de salida</th><th>Especial</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for h in grupo.horarios %}
+        <tr>
+          <td>{{ h.ruta }}</td>
+          <td>{{ h.hora_salida|time:"H:i" }}</td>
+          <td>{% if h.es_horario_especial %}Sí{% else %}—{% endif %}</td>
+          <td class="horarios-admin__actions">
+            <a href="{% url opts|admin_urlname:'change' h.pk %}">Editar</a>
+            <a href="{% url opts|admin_urlname:'delete' h.pk %}">Eliminar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="horarios-admin__empty">Sin horarios cargados en este bloque.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

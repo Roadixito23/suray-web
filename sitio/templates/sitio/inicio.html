@@ -11,8 +11,8 @@
   <div class="hero__slide"></div>
   <div class="hero__content container">
     <div class="hero__actions">
-      <a class="pill-btn" href="{% url 'sitio:contacto' %}">📍 Ubícanos</a>
-      <a class="pill-btn" href="{% url 'sitio:ruta' %}">🗺️ Ruta</a>
+      <a class="pill-btn" href="{% url 'sitio:contacto' %}">Ubícanos</a>
+      <a class="pill-btn" href="{% url 'sitio:ruta' %}">Ruta</a>
     </div>
     <a class="pill-btn pill-btn--primary" href="{% url 'sitio:horarios' %}">
       <img src="{% static 'img/icono_bus_reloj.png' %}" alt="">
@@ -41,7 +41,7 @@
             <span class="chip chip--manana">MAÑANA</span>
           {% endif %}
         </div>
-        <span class="weather-chip">☀️ Clima próximamente (OpenWeatherMap)</span>
+        <span class="weather-chip">Clima próximamente (OpenWeatherMap)</span>
       </div>
       {% empty %}
       <p>Aún no hay horarios cargados. Agrégalos desde el <a href="/admin/">panel de administración</a>.</p>

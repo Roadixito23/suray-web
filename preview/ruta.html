@@ -19,8 +19,8 @@
       <li><a href="ruta.html" class="is-active">Ruta</a></li>
       <li><a href="contacto.html">Contacto</a></li>
     </ul>
-    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
-    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">Oscuro</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">Menú</button>
   </div>
 </nav>
 
@@ -81,8 +81,8 @@
   var btn = document.getElementById('themeToggle');
   var root = document.documentElement;
   function applyTheme(t) {
-    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
-    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = 'Claro'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = 'Oscuro'; }
   }
   applyTheme(localStorage.getItem('suray-theme') || 'light');
   btn.addEventListener('click', function () {

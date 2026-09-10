@@ -22,8 +22,8 @@
       <li><a href="ruta.html">Ruta</a></li>
       <li><a href="contacto.html">Contacto</a></li>
     </ul>
-    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
-    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">Oscuro</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">Menú</button>
   </div>
 </nav>
 
@@ -32,8 +32,8 @@
   <div class="hero__slide"></div>
   <div class="hero__content container">
     <div class="hero__actions">
-      <a class="pill-btn" href="contacto.html">📍 Ubícanos</a>
-      <a class="pill-btn" href="ruta.html">🗺️ Ruta</a>
+      <a class="pill-btn" href="contacto.html">Ubícanos</a>
+      <a class="pill-btn" href="ruta.html">Ruta</a>
     </div>
     <a class="pill-btn pill-btn--primary" href="horarios.html">
       <img src="../static/img/icono_bus_reloj.png" alt="">
@@ -61,7 +61,7 @@
           <span>Mañana a las 07:00 a.m.</span>
           <span class="chip chip--manana">MAÑANA</span>
         </div>
-        <span class="weather-chip">☀️ 12°C Puerto Aysén (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
+        <span class="weather-chip">12°C Puerto Aysén (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
       </div>
       <div class="departure-col">
         <h4>Desde Coyhaique</h4>
@@ -73,7 +73,7 @@
           <span>Mañana a las 08:30 a.m.</span>
           <span class="chip chip--manana">MAÑANA</span>
         </div>
-        <span class="weather-chip">⛅ 9°C Coyhaique (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
+        <span class="weather-chip">9°C Coyhaique (placeholder — se conecta a OpenWeatherMap en Fase 4)</span>
       </div>
     </div>
   </section>
@@ -108,8 +108,8 @@
   var btn = document.getElementById('themeToggle');
   var root = document.documentElement;
   function applyTheme(t) {
-    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
-    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = 'Claro'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = 'Oscuro'; }
   }
   applyTheme(localStorage.getItem('suray-theme') || 'light');
   btn.addEventListener('click', function () {

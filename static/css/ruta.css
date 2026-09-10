@@ -37,11 +37,19 @@
 .quick-btn--ays { background: var(--color-primary-orange); }
 .quick-btn--coy { background: var(--color-accent-blue); }
 
-.static-map {
+.static-map,
+.live-map {
   width: 100%;
-  height: auto;
+  height: 420px;
   display: block;
   background: linear-gradient(160deg, #DCEFE3, #CFE8DA);
+}
+.map-missing-key {
+  margin: 0;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: .85rem;
 }
 .map-pin-label {
   font-family: system-ui, sans-serif;

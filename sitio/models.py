@@ -87,3 +87,33 @@ class Feriado(models.Model):
 
     def __str__(self):
         return f"{self.fecha} - {self.nombre}"
+
+
+class ConfiguracionSitio(models.Model):
+    """Fila unica (pk=1) con ajustes globales del sitio editables desde el admin."""
+
+    google_maps_api_key = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="API key de Google Maps JavaScript API para el mapa interactivo de Ruta. "
+                   "Restringela por dominio (HTTP referrer) en Google Cloud Console.",
+    )
+
+    class Meta:
+        verbose_name = "Configuración del sitio"
+        verbose_name_plural = "Configuración del sitio"
+
+    def __str__(self):
+        return "Configuración del sitio"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

@@ -1,9 +1,10 @@
+import json
 from datetime import timedelta
 
 from django.shortcuts import render
 from django.utils import timezone
 
-from .models import Feriado, Horario, Oficina, Ruta
+from .models import ConfiguracionSitio, Feriado, Horario, Oficina, Ruta
 
 DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
@@ -110,4 +111,15 @@ def contacto(request):
 
 
 def ruta(request):
-    return render(request, "sitio/ruta.html")
+    config = ConfiguracionSitio.load()
+    # Coordenadas de los terminales, migradas desde paraderos_page.dart.
+    # Se serializan a JSON en la vista para evitar que Django las formatee
+    # con coma decimal (locale es-cl) y rompa la sintaxis del script inline.
+    puerto_aysen = {"lat": -45.40111614852224, "lng": -72.68738064167634}
+    coyhaique = {"lat": -45.582039, "lng": -72.078136}
+    context = {
+        "google_maps_api_key": config.google_maps_api_key,
+        "puerto_aysen_json": json.dumps(puerto_aysen),
+        "coyhaique_json": json.dumps(coyhaique),
+    }
+    return render(request, "sitio/ruta.html", context)

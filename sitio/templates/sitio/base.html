@@ -23,12 +23,14 @@
       <li><a href="{% url 'sitio:ruta' %}" {% if request.resolver_match.url_name == 'ruta' %}class="is-active"{% endif %}>Ruta</a></li>
       <li><a href="{% url 'sitio:contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a></li>
     </ul>
-    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">🌙</button>
-    <button class="nav-toggle" aria-label="Abrir menú" type="button">☰</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">Oscuro</button>
+    <button class="nav-toggle" aria-label="Abrir menú" type="button">Menú</button>
   </div>
 </nav>
 
+<div class="page-body">
 {% block content %}{% endblock %}
+</div>
 
 <footer class="site-footer">
   <div class="container">
@@ -41,6 +43,14 @@
       </a>
     </div>
     <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
+    <div class="site-footer__meta">
+      {% if user.is_authenticated %}
+        <a class="footer-admin-btn" href="{% url 'admin:index' %}">Panel admin</a>
+      {% else %}
+        <a class="footer-admin-btn" href="{% url 'admin:login' %}">Administrador</a>
+      {% endif %}
+      <span class="site-footer__version">v{{ site_version }}</span>
+    </div>
   </div>
 </footer>
 
@@ -48,8 +58,8 @@
   var btn = document.getElementById('themeToggle');
   var root = document.documentElement;
   function applyTheme(t) {
-    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; }
-    else { root.removeAttribute('data-theme'); btn.textContent = '🌙'; }
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = 'Claro'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = 'Oscuro'; }
   }
   applyTheme(localStorage.getItem('suray-theme') || 'light');
   btn.addEventListener('click', function () {

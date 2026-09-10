@@ -1,0 +1,59 @@
+/* Panel "Horarios" del admin: 3 tarjetas agrupadas por tipo de dia,
+   con los mismos colores que static/css/horarios.css usa en el sitio. */
+.horarios-admin { display: grid; gap: 1.25rem; margin: 1rem 0 2rem; }
+
+.horarios-admin__card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.horarios-admin__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1.1rem;
+  color: #fff;
+}
+.horarios-admin__header h2 { margin: 0; font-size: 1.05rem; font-weight: 600; }
+
+.horarios-admin__card--lv .horarios-admin__header { background: linear-gradient(135deg, #06D6A0, #05B287); }
+.horarios-admin__card--sab .horarios-admin__header { background: linear-gradient(135deg, #FFB703, #FB8500); }
+.horarios-admin__card--df .horarios-admin__header { background: linear-gradient(135deg, #EF476F, #D62246); }
+
+.horarios-admin__badge {
+  background: rgba(0,0,0,.25);
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  letter-spacing: .03em;
+}
+
+.horarios-admin__table { width: 100%; border-collapse: collapse; }
+.horarios-admin__table th,
+.horarios-admin__table td {
+  padding: .55rem 1.1rem;
+  text-align: left;
+  font-size: .85rem;
+  border-top: 1px solid #eef1f5;
+}
+.horarios-admin__table th {
+  color: #64748B;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .04em;
+  border-top: none;
+}
+
+.horarios-admin__actions a {
+  margin-right: .75rem;
+  color: #F47200;
+  font-weight: 600;
+  text-decoration: none;
+}
+.horarios-admin__actions a:hover { text-decoration: underline; }
+
+.horarios-admin__empty { color: #94A3B8; font-style: italic; }

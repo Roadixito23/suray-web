@@ -12,21 +12,15 @@
   <div class="map-wrap">
     <span class="map-title">Ruta Buses Suray</span>
     <div class="map-quick-btns">
-      <button class="quick-btn quick-btn--ays" type="button">AYS</button>
-      <button class="quick-btn quick-btn--coy" type="button">COY</button>
+      <button class="quick-btn quick-btn--ays" id="btnAys" type="button">AYS</button>
+      <button class="quick-btn quick-btn--coy" id="btnCoy" type="button">COY</button>
     </div>
 
-    <svg class="static-map" viewBox="0 0 800 360" role="img" aria-label="Mapa esquemático de la ruta entre Puerto Aysén y Coyhaique">
-      <path d="M 120 260 C 260 220, 340 120, 420 100 S 620 90, 680 110"
-            fill="none" stroke="#F47200" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
-      <circle cx="120" cy="260" r="10" fill="#001959"/>
-      <circle cx="120" cy="260" r="4" fill="#fff"/>
-      <text x="140" y="255" class="map-pin-label">Puerto Aysén</text>
-
-      <circle cx="680" cy="110" r="10" fill="#3B82F6"/>
-      <circle cx="680" cy="110" r="4" fill="#fff"/>
-      <text x="620" y="95" class="map-pin-label">Coyhaique</text>
-    </svg>
+    {% if google_maps_api_key %}
+      <div id="rutaMap" class="live-map" role="img" aria-label="Mapa interactivo de la ruta entre Puerto Aysén y Coyhaique"></div>
+    {% else %}
+      <p class="map-missing-key">Falta configurar la API key de Google Maps en Configuración del sitio (admin).</p>
+    {% endif %}
   </div>
 
   <div class="terminal-cards">
@@ -44,4 +38,55 @@
     </section>
   </div>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+{% if google_maps_api_key %}
+<script>
+  window.SURAY_PUERTO_AYSEN = {{ puerto_aysen_json|safe }};
+  window.SURAY_COYHAIQUE = {{ coyhaique_json|safe }};
+
+  function initRutaMap() {
+    var aysen = window.SURAY_PUERTO_AYSEN;
+    var coyhaique = window.SURAY_COYHAIQUE;
+    var center = { lat: (aysen.lat + coyhaique.lat) / 2, lng: (aysen.lng + coyhaique.lng) / 2 };
+
+    var map = new google.maps.Map(document.getElementById("rutaMap"), {
+      center: center,
+      zoom: 9,
+      streetViewControl: false,
+      mapTypeControl: false,
+      fullscreenControl: false,
+    });
+
+    var markerAys = new google.maps.Marker({
+      position: aysen, map: map, title: "Puerto Aysén",
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#001959", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+    });
+    var markerCoy = new google.maps.Marker({
+      position: coyhaique, map: map, title: "Coyhaique",
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+    });
+
+    new google.maps.Polyline({
+      path: [aysen, coyhaique],
+      strokeColor: "#F47200",
+      strokeOpacity: 0,
+      icons: [{
+        icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+        offset: "0", repeat: "14px",
+      }],
+      map: map,
+    });
+
+    document.getElementById("btnAys").addEventListener("click", function () {
+      map.panTo(aysen); map.setZoom(13); google.maps.event.trigger(markerAys, "click");
+    });
+    document.getElementById("btnCoy").addEventListener("click", function () {
+      map.panTo(coyhaique); map.setZoom(13); google.maps.event.trigger(markerCoy, "click");
+    });
+  }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initRutaMap" async defer></script>
+{% endif %}
 {% endblock %}
