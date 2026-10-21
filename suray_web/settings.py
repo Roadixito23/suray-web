@@ -30,7 +30,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 
 # Version mostrada en el footer: fecha (DD.MM.AA) + correlativo de actualizacion (01-99).
 # Actualizar manualmente aqui cada vez que se publique un cambio en el sitio.
-SITE_VERSION = '10.09.26-01'
+SITE_VERSION = '21.10.26-01'
 
 
 # Application definition
