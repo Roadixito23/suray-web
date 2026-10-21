@@ -15,7 +15,7 @@
 <nav class="site-nav">
   <div class="container">
     <a class="site-nav__brand" href="{% url 'sitio:inicio' %}">
-      <img src="{% static 'img/logo.png' %}" alt="Buses Suray">
+      <img src="{% static 'img/logo.png' %}" alt="Buses Suray" width="118" height="68">
     </a>
     <ul class="site-nav__links">
       <li><a href="{% url 'sitio:inicio' %}" {% if request.resolver_match.url_name == 'inicio' %}class="is-active"{% endif %}>Inicio</a></li>
@@ -36,7 +36,7 @@
   <div class="container">
     <div class="site-footer__social">
       <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
-        <img src="{% static 'img/icono_instagram.png' %}" alt="Instagram"> @buses.suray.cargo
+        <img src="{% static 'img/icono_instagram.png' %}" alt="Instagram" width="22" height="22" loading="lazy"> @buses.suray.cargo
       </a>
       <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
         <span class="icon-facebook">f</span> buses.suray.cargo
