@@ -68,6 +68,8 @@ En la misma pantalla de "Setup Python App", sección **Environment variables**, 
 
 Nunca escribir estos valores en el código ni subirlos al repositorio.
 
+`BROWSER_RELOAD` (recarga automática del navegador en desarrollo) **no se define en el servidor**: así `django_browser_reload` no se carga aunque `DEBUG` estuviera activo.
+
 ## 3. Instalar dependencias
 
 Desde la Terminal de cPanel (o SSH), activando el virtualenv que cPanel genera para la app:

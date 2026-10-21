@@ -15,8 +15,8 @@
   opacity: 0;
   animation: hero-crossfade 12s infinite;
 }
-.hero__slide:nth-child(1) { background-image: url('../img/panel_puente_aysen.png'); animation-delay: 0s; }
-.hero__slide:nth-child(2) { background-image: url('../img/panel_tunel.png'); animation-delay: 6s; }
+.hero__slide:nth-child(1) { background-image: url('../img/panel_puente_aysen.webp'); animation-delay: 0s; }
+.hero__slide:nth-child(2) { background-image: url('../img/panel_tunel.webp'); animation-delay: 6s; }
 @keyframes hero-crossfade {
   0%   { opacity: 0; }
   4%   { opacity: 1; }

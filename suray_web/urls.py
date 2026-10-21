@@ -23,5 +23,5 @@ urlpatterns = [
     path('', include('sitio.urls')),
 ]
 
-if settings.DEBUG:
+if settings.BROWSER_RELOAD:
     urlpatterns.append(path('__reload__/', include('django_browser_reload.urls')))

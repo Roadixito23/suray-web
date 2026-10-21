@@ -56,8 +56,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Recarga automatica del navegador en desarrollo (solo si DEBUG=True).
-if DEBUG:
+# Recarga automatica del navegador: solo en desarrollo local. Requiere DEBUG=True
+# y BROWSER_RELOAD=True en el .env; en el servidor no se define.
+BROWSER_RELOAD = DEBUG and config('BROWSER_RELOAD', default=False, cast=bool)
+
+if BROWSER_RELOAD:
     INSTALLED_APPS.append('django_browser_reload')
     MIDDLEWARE.append('django_browser_reload.middleware.BrowserReloadMiddleware')
 
@@ -166,9 +169,9 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
 
 
 # Email
