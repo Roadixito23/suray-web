@@ -153,3 +153,79 @@ Una vez que todo lo anterior está probado (vía URL temporal o el `hosts` local
   entorno hasta que lo esté, o los usuarios verán errores de redirección.
 - El proyecto asume que Apache/Passenger reenvía el header `X-Forwarded-Proto` — si cPanel
   no lo hace por defecto, revisar `SECURE_PROXY_SSL_HEADER` en `settings.py`.
+
+## 10. Despliegue automático por webhook (test.suray.cl)
+
+Cada push a `main` dispara el despliegue al instante: GitHub llama a
+`https://test.suray.cl/deploy/webhook/`, la app valida la firma y lanza
+`auto_deploy_test.py`, que sincroniza los archivos, ejecuta `pip install` (solo si cambió
+`requirements.txt`), `collectstatic` y `migrate`, y recién entonces reinicia la app.
+
+> **Importante:** `deploy/` está en `SKIP_ENTRIES`, así que el script **no se sincroniza solo**.
+> La copia que corre en el servidor vive en `/home/suraycl1/deploy_scripts/auto_deploy_test.py`
+> y hay que subirla a mano cada vez que cambie `deploy/auto_deploy_test.py` en el repo.
+
+### 10.1 Generar el secreto
+
+En tu máquina:
+
+```
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+En cPanel → **Setup Python App** → Environment variables, agrega `WEBHOOK_SECRET` con ese
+valor y reinicia la app. Mientras `WEBHOOK_SECRET` esté vacío, el endpoint responde 404.
+
+### 10.2 Subir el script nuevo
+
+Con File Manager de cPanel, sube `deploy/auto_deploy_test.py` a
+`/home/suraycl1/deploy_scripts/auto_deploy_test.py` (reemplazando el anterior).
+
+### 10.3 Configurar el webhook en GitHub
+
+Repositorio → **Settings → Webhooks → Add webhook**:
+
+- **Payload URL:** `https://test.suray.cl/deploy/webhook/` (con `https`; GitHub no sigue redirecciones).
+- **Content type:** `application/json`.
+- **Secret:** el mismo valor de `WEBHOOK_SECRET`.
+- **Events:** "Just the push event".
+- **SSL verification:** activada. **Active:** marcado.
+
+Al guardar, GitHub envía un evento `ping`; debe aparecer con ✔ (HTTP 200) en *Recent Deliveries*.
+
+### 10.4 Cron de respaldo y reintento
+
+El despliegue desde el cron **no tiene las variables de entorno de cPanel**. Crea
+`/home/suraycl1/deploy_scripts/deploy.env` con líneas `KEY=VALUE` (las mismas de la
+sección 2: `DEBUG=False`, `ALLOWED_HOSTS`, `SECRET_KEY`, `DB_ENGINE=mysql`, `DB_NAME`,
+`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`). Restringe su acceso (permisos `600`), ya
+que contiene credenciales. Si el script detecta que la configuración efectiva usa SQLite,
+**omite `migrate`** y deja una advertencia en el log.
+
+En cPanel → **Cron Jobs**:
+
+1. Cambia el cron existente de `*/15 * * * *` a cada hora (`0 * * * *`), como respaldo:
+   ```
+   /home/suraycl1/virtualenv/public_html/test.suray.cl/3.12/bin/python /home/suraycl1/deploy_scripts/auto_deploy_test.py
+   ```
+2. Opcional, cada minuto (`* * * * *`): reintenta solo si existe `deploy.flag`. El marcador
+   lo crea la app si no pudo lanzar el script, o el propio script si llegó un push mientras
+   había un despliegue en curso:
+   ```
+   [ -f /home/suraycl1/deploy_scripts/deploy.flag ] && /home/suraycl1/virtualenv/public_html/test.suray.cl/3.12/bin/python /home/suraycl1/deploy_scripts/auto_deploy_test.py
+   ```
+
+### 10.5 Revisar que funcione
+
+- **Log del despliegue:** `/home/suraycl1/deploy_scripts/test_deploy.log` (pasos ejecutados,
+  salida de `collectstatic`/`migrate` y errores).
+- **Salida del lanzamiento desde la app:** `/home/suraycl1/deploy_scripts/webhook_launch.log`.
+- **Entregas en GitHub:** Settings → Webhooks → tu webhook → **Recent Deliveries** (código
+  de respuesta y reenvío con *Redeliver*). 202 = recibido; 403 = firma inválida
+  (secreto distinto); 404 = `WEBHOOK_SECRET` no definido en la app.
+- Si `collectstatic` o `migrate` fallan, la app **no se reinicia** y no se guarda el SHA:
+  el siguiente intento (otro push, el cron o el marcador) lo reintenta.
+
+> Con `DEBUG=False` los estáticos solo se sirven tras `collectstatic` (Whitenoise con
+> manifiesto); si falta, las páginas dan error 500. El script ya lo ejecuta en cada despliegue.
+
