@@ -12,14 +12,19 @@ Class-based views
     2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
+
+from . import deploy_hook
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from . import deploy_hook
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('deploy/webhook/', deploy_hook.webhook, name='deploy_webhook'),
     path('', include('sitio.urls')),
 ]
 
