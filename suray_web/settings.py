@@ -174,6 +174,14 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
 
 
+# Webhook de GitHub para el despliegue automatico (ver DEPLOY.md). Con
+# WEBHOOK_SECRET vacio el endpoint /deploy/webhook/ responde 404 (inactivo).
+WEBHOOK_SECRET = config('WEBHOOK_SECRET', default='')
+DEPLOY_SCRIPT = config('DEPLOY_SCRIPT', default='/home/suraycl1/deploy_scripts/auto_deploy_test.py')
+DEPLOY_FLAG_FILE = config('DEPLOY_FLAG_FILE', default='/home/suraycl1/deploy_scripts/deploy.flag')
+DEPLOY_LAUNCH_LOG = config('DEPLOY_LAUNCH_LOG', default='/home/suraycl1/deploy_scripts/webhook_launch.log')
+
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
