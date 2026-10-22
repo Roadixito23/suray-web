@@ -4,39 +4,38 @@
 {% block title %}Ruta | Buses Suray{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/ruta.css' %}">
+<link rel="stylesheet" href="{% static 'css/ruta.css' %}?v={{ site_version }}">
 {% endblock %}
 
 {% block content %}
 <main class="container">
-  <div class="map-wrap">
-    <span class="map-title">Ruta Buses Suray</span>
-    <div class="map-quick-btns">
-      <button class="quick-btn quick-btn--ays" id="btnAys" type="button">AYS</button>
-      <button class="quick-btn quick-btn--coy" id="btnCoy" type="button">COY</button>
-    </div>
-
-    {% if google_maps_api_key %}
-      <div id="rutaMap" class="live-map" role="img" aria-label="Mapa interactivo de la ruta entre Puerto Aysén y Coyhaique"></div>
-    {% else %}
-      <p class="map-missing-key">Falta configurar la API key de Google Maps en Configuración del sitio (admin).</p>
-    {% endif %}
+  <div class="page-header">
+    <h1>Ruta</h1>
+    <p>Puerto Aysén y Coyhaique, por la ruta 240.</p>
   </div>
 
   <div class="terminal-cards">
     <section class="terminal-card">
-      <p class="eyebrow">Terminal</p>
-      <h3>Aysén Suray</h3>
+      <h2>Terminal Aysén Suray</h2>
       <p>Eusebio Ibar 630, Puerto Aysén</p>
-      <a href="https://maps.app.goo.gl/1nv7mAcGRpFVPMacA" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+      <a class="btn" href="https://maps.app.goo.gl/1nv7mAcGRpFVPMacA" target="_blank" rel="noopener">Ver en Google Maps</a>
     </section>
     <section class="terminal-card">
-      <p class="eyebrow">Terminal</p>
-      <h3>Coyhaique Suray</h3>
+      <h2>Terminal Coyhaique Suray</h2>
       <p>Av. Norte Sur/Las Violetas, Terminal de Coyhaique, Of. N°2</p>
-      <a href="https://maps.app.goo.gl/9AJMknQmkmf3tHSo8" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+      <a class="btn" href="https://maps.app.goo.gl/9AJMknQmkmf3tHSo8" target="_blank" rel="noopener">Ver en Google Maps</a>
     </section>
   </div>
+
+  {% if google_maps_api_key %}
+  <div class="map-wrap">
+    <div class="map-quick-btns">
+      <button class="btn" id="btnAys" type="button">Ir a Aysén</button>
+      <button class="btn" id="btnCoy" type="button">Ir a Coyhaique</button>
+    </div>
+    <div id="rutaMap" class="live-map" role="img" aria-label="Mapa interactivo de la ruta entre Puerto Aysén y Coyhaique"></div>
+  </div>
+  {% endif %}
 </main>
 {% endblock %}
 

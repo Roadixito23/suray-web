@@ -6,8 +6,8 @@ from django.utils import timezone
 
 from .models import ConfiguracionSitio, Feriado, Horario, Oficina, Ruta
 
-DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
+DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 
 
 def _tipo_dia_para(fecha, es_feriado):
@@ -34,43 +34,37 @@ def inicio(request):
 
     salidas = []
     for origen in Ruta.objects.order_by("id").values_list("origen", flat=True).distinct():
-        proximo_hoy = None
+        # Hasta 3 salidas: primero las que quedan hoy, luego las de manana.
+        proximas = []
         if not (feriado_hoy and feriado_hoy.sin_servicio):
-            proximo_hoy = (
-                Horario.objects.filter(ruta__origen=origen, tipo_dia=tipo_hoy, hora_salida__gte=ahora)
-                .order_by("hora_salida")
-                .first()
-            )
+            horas = Horario.objects.filter(
+                ruta__origen=origen, tipo_dia=tipo_hoy, hora_salida__gte=ahora
+            ).order_by("hora_salida")[:3]
+            proximas += [("hoy", h.hora_salida) for h in horas]
+        if len(proximas) < 3 and not (feriado_manana and feriado_manana.sin_servicio):
+            horas = Horario.objects.filter(
+                ruta__origen=origen, tipo_dia=tipo_manana
+            ).order_by("hora_salida")[: 3 - len(proximas)]
+            proximas += [("mañana", h.hora_salida) for h in horas]
 
-        if proximo_hoy:
+        if proximas:
+            dia, hora = proximas[0]
             salidas.append({
                 "origen": origen,
-                "estado": f"Hoy a las {proximo_hoy.hora_salida.strftime('%H:%M')} hrs.",
-                "chip": "HOY",
-            })
-            continue
-
-        proximo_manana = None
-        if not (feriado_manana and feriado_manana.sin_servicio):
-            proximo_manana = (
-                Horario.objects.filter(ruta__origen=origen, tipo_dia=tipo_manana)
-                .order_by("hora_salida")
-                .first()
-            )
-
-        if proximo_manana:
-            salidas.append({
-                "origen": origen,
-                "estado": f"Mañana a las {proximo_manana.hora_salida.strftime('%H:%M')} a.m.",
-                "chip": "MAÑANA",
+                "hora": hora.strftime("%H:%M"),
+                "dia": dia,
+                "despues": [
+                    f"mañana {h.strftime('%H:%M')}" if d != dia else h.strftime("%H:%M")
+                    for d, h in proximas[1:]
+                ],
             })
         elif feriado_hoy and feriado_hoy.sin_servicio:
-            salidas.append({"origen": origen, "estado": "Sin recorrido", "chip": None})
+            salidas.append({"origen": origen, "aviso": "Sin recorrido hoy por feriado."})
         else:
-            salidas.append({"origen": origen, "estado": "Sin salidas próximas", "chip": None})
+            salidas.append({"origen": origen, "aviso": "Sin salidas próximas."})
 
     if feriado_hoy:
-        hoy_label = f"Hoy es Feriado: {feriado_hoy.nombre}"
+        hoy_label = f"Hoy es feriado: {feriado_hoy.nombre}"
     else:
         hoy_label = f"Hoy es {DIAS[hoy.weekday()]} {hoy.day} de {MESES[hoy.month - 1]}"
 
@@ -104,8 +98,10 @@ def horarios(request):
 def contacto(request):
     oficinas = Oficina.objects.prefetch_related("horarios")
     context = {
-        "oficinas_aysen": [o for o in oficinas if o.ciudad == "Puerto Aysén"],
-        "oficinas_coyhaique": [o for o in oficinas if o.ciudad == "Coyhaique"],
+        "ciudades": [
+            (ciudad, [o for o in oficinas if o.ciudad == ciudad])
+            for ciudad in ("Puerto Aysén", "Coyhaique")
+        ],
     }
     return render(request, "sitio/contacto.html", context)
 

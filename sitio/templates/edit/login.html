@@ -1,0 +1,27 @@
+{% extends "edit/base.html" %}
+
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block content %}
+<section class="login">
+  <h1>Iniciar sesión</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+
+    {% if form.non_field_errors %}
+    <p class="error" role="alert">{{ form.non_field_errors.0 }}</p>
+    {% endif %}
+
+    <label class="field">
+      <span>Usuario</span>
+      <input type="text" name="username" autocomplete="username" autocapitalize="none" autofocus required>
+    </label>
+    <label class="field">
+      <span>Contraseña</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn btn--brand" type="submit">Entrar</button>
+  </form>
+</section>
+{% endblock %}

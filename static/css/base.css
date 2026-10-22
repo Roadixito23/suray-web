@@ -2,128 +2,294 @@
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; }
 img { max-width: 100%; display: block; }
-a { text-decoration: none; color: inherit; }
+a { color: inherit; }
 ul { list-style: none; margin: 0; padding: 0; }
 button { font: inherit; cursor: pointer; }
 
-/* Tipografia: Hemiheads para titulos, system-ui para el resto.
-   Nota: el original declara 'Montserrat' pero nunca la carga (sin Google Fonts,
-   sin bundle) — se replica ese comportamiento a proposito (ver inventario, seccion 5). */
-html, body { height: 100%; }
+/* Alto de las curvas del header y del footer: la foto de fondo pasa por detras de ambas. */
+:root {
+  --hwave-h: clamp(28px, 8vw, 40px);
+  --fwave-h: clamp(36px, 5vw, 64px);
+  --foto-opacidad: .8; /* modo claro */
+}
+[data-theme="dark"] { --foto-opacidad: .2; }
+@media (min-width: 721px) {
+  :root { --hwave-h: clamp(32px, 3.2vw, 48px); }
+}
+
+/* 1rem = 19px: base pensada para lectura comoda en celular. */
+html { font-size: 118.75%; height: 100%; }
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Atkinson Hyperlegible', Verdana, Tahoma, system-ui, sans-serif;
+  line-height: 1.5;
   background: var(--bg-page);
   color: var(--text-body);
-  transition: background-color .2s ease, color .2s ease;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
+h1, h2, h3, h4 {
+  color: var(--text-heading);
+  line-height: 1.2;
+  font-weight: 700;
+  margin: 0;
+}
+p { margin: 0 0 1rem; max-width: 60ch; }
 
-/* Empuja el footer al fondo del viewport cuando el contenido es corto
-   (ej. paginas con poco contenido como Ruta o un Inicio sin muchas salidas). */
-.page-body {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
 }
-.site-footer {
-  flex-shrink: 0;
+
+/* Empuja el footer al fondo cuando el contenido es corto. */
+.page-body { flex: 1 0 auto; display: flex; flex-direction: column; position: relative; isolation: isolate;
+  margin-top: calc(-1 * var(--hwave-h));
+  padding-top: var(--hwave-h);
+  padding-bottom: calc(var(--fwave-h) + 1.5rem);
 }
-h1, h2, h3, .font-headline {
-  font-family: 'Hemiheads', system-ui, sans-serif;
-  font-weight: normal;
-  letter-spacing: .02em;
+
+/* Carrusel de fondo (dos fotos, crossfade solo CSS). Opacidad: 80% en modo claro y 20% en oscuro (--foto-opacidad). Fotos de alta resolucion: 1920px en PC (~180-230 KB c/u) y 1280px en celular (~110 KB c/u); se omiten con ahorro de datos. */
+.page-body::before,
+.page-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  pointer-events: none;
+  animation: fondo-crossfade 14s infinite;
 }
+.page-body::before { background-image: url('../img/fondo-puente-m.webp'); }
+.page-body::after { background-image: url('../img/fondo-tunel-m.webp'); animation-delay: 7s; }
+@media (min-width: 721px) {
+  .page-body::before { background-image: url('../img/fondo-puente.webp'); }
+  .page-body::after { background-image: url('../img/fondo-tunel.webp'); }
+}
+@keyframes fondo-crossfade {
+  0%   { opacity: 0; }
+  8%   { opacity: var(--foto-opacidad); }
+  46%  { opacity: var(--foto-opacidad); }
+  54%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-body::before { animation: none; opacity: var(--foto-opacidad); }
+  .page-body::after { display: none; }
+}
+@media (prefers-reduced-data: reduce) {
+  .page-body::before, .page-body::after { display: none; }
+}
+.site-footer { flex-shrink: 0; }
 
 .container {
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.25rem;
 }
 
-/* Nav unificada (decision checkpoint 1, #9): el sitio original no tenia una
-   nav consistente entre pantallas; aqui se unifica tipo sitio web normal. */
-.site-nav {
-  background: var(--bg-nav);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+/* Titulo de pagina compartido (Horarios, Contacto) */
+.page-header { padding: 2rem 0 1.25rem; }
+.page-header h1 { font-size: 2rem; margin-bottom: .5rem; }
+.page-header p { color: var(--text-muted); margin: 0; }
+
+/* Botones: 48px de alto minimo para dedos. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: .6rem 1.4rem;
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 6px;
 }
+.btn:hover { background: var(--ink); color: var(--ink-contrast); }
+.btn--brand {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-family: 'Hemiheads', 'Atkinson Hyperlegible', sans-serif;
+  font-weight: normal;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+}
+.btn--brand:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
+
+/* Header: barra navy + divisor curvo (espejo del footer: dos franjas que suben a la derecha).
+   Fijo solo en pantallas anchas; en celular se desplaza con la pagina para no gastar alto. */
+.site-header { position: relative; z-index: 50; }
+.site-nav { background: var(--header-fill, #001959); }
 .site-nav .container {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  min-height: 64px;
-  gap: 1rem;
+  gap: .5rem 1rem;
+  min-height: 4rem;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
 }
-.site-nav__brand {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-}
-.site-nav__brand img { height: 34px; width: auto; }
+.site-nav__brand { display: flex; align-items: center; margin-right: auto; }
+.site-nav__brand img { height: 44px; width: auto; }
+/* Celular: el menu se despliega hacia abajo. Cerrado queda con alto 0 y oculto (no enfocable). */
 .site-nav__links {
   display: flex;
-  gap: 1.75rem;
+  flex-basis: 100%;
+  order: 3;
+  flex-direction: column;
+  max-height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
+.site-nav.is-open .site-nav__links { max-height: 20rem; visibility: visible; }
 .site-nav__links a {
+  display: block;
   color: #fff;
-  font-size: .95rem;
-  font-weight: 600;
-  padding: .4rem 0;
-  border-bottom: 2px solid transparent;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  padding: .9rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.2);
 }
-.site-nav__links a.is-active,
-.site-nav__links a:hover {
-  border-bottom-color: var(--color-primary-orange);
-}
-.theme-toggle {
-  background: rgba(255,255,255,.12);
-  border: none;
-  color: #fff;
-  padding: .4rem .9rem;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: .8rem;
-  font-weight: 600;
-}
+.site-nav__links a.is-active { box-shadow: inset 6px 0 0 var(--accent); padding-left: 1rem; }
+.theme-toggle,
 .nav-toggle {
-  display: none;
-  background: none;
-  border: none;
+  min-height: 2.75rem;
+  padding: .4rem .9rem;
+  border: 2px solid rgba(255,255,255,.55);
+  border-radius: 6px;
+  background: transparent;
   color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.theme-toggle:hover,
+.nav-toggle:hover { background: rgba(255,255,255,.15); }
+.nav-toggle::after {
+  content: "";
+  display: inline-block;
+  width: .45em;
+  height: .45em;
+  margin-left: .5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-.15em) rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"]::after { transform: translateY(.1em) rotate(-135deg); }
+
+.header-wave {
+  display: block;
+  width: 100%;
+  height: var(--hwave-h);
+  margin-top: -1px;
+  margin-bottom: -2px;
+  pointer-events: none;
+}
+.header-wave__fill { fill: var(--header-fill, #001959); }
+.header-wave__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
 }
 
-/* Footer (existe solo en Inicio en el original; ahora unificado en todas las paginas) */
+@media (max-width: 380px) {
+  .site-nav__brand img { height: 40px; }
+  .theme-toggle, .nav-toggle { padding: .4rem .6rem; font-size: .8rem; }
+}
+
+@media (min-width: 721px) {
+  .site-header { position: sticky; top: 0; }
+  .site-nav .container { flex-wrap: nowrap; min-height: 5rem; }
+  .site-nav__brand img { height: 64px; }
+  .site-nav__links {
+    flex-basis: auto;
+    order: 0;
+    flex-direction: row;
+    gap: 1.5rem;
+    max-height: none;
+    overflow: visible;
+    visibility: visible;
+  }
+  .site-nav__links a {
+    position: relative;
+    display: inline-block;
+    padding: .6rem 0;
+    font-size: 1.05rem;
+    border-bottom: 0;
+  }
+  .site-nav__links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .site-nav__links a.is-active { box-shadow: none; padding-left: 0; }
+  .site-nav__links a.is-active::after,
+  .site-nav__links a:hover::after,
+  .site-nav__links a:focus-visible::after { transform: scaleX(1); }
+  .nav-toggle { display: none; }
+}
+
+/* Footer */
 .site-footer {
-  background: var(--color-footer-beige);
-  color: var(--color-primary-navy);
-  padding: 2rem 0;
-  margin-top: 3rem;
+  background: var(--footer-bg, #001959);
+  color: var(--footer-fg, #fff);
+  padding: 1.25rem 0;
+}
+
+/* Divisor curvo sobre el footer: franja delgada naranja + franja rellena del color del footer. */
+.footer-wave {
+  display: block;
+  width: 100%;
+  height: var(--fwave-h);
+  margin-top: calc(-1 * var(--fwave-h));
+  margin-bottom: -1px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.footer-wave__fill { fill: var(--footer-bg, #001959); }
+.footer-wave__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
 }
 .site-footer .container {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.site-footer__top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: .5rem 1rem;
 }
-.site-footer__social {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
+.site-footer__social { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 .site-footer__social a {
   display: flex;
   align-items: center;
-  gap: .4rem;
-  font-size: .9rem;
-  font-weight: 600;
+  gap: .5rem;
+  min-height: 2.75rem;
+  font-weight: 700;
+  text-decoration: none;
 }
+/* El subrayado va solo en el texto: si va en el <a>, se propaga tambien a la "f" del icono. */
+.site-footer__label { text-decoration: underline; text-underline-offset: 3px; }
 .site-footer__social img { height: 22px; width: 22px; }
 .icon-facebook {
   width: 22px; height: 22px; border-radius: 50%;
@@ -133,46 +299,127 @@ h1, h2, h3, .font-headline {
 }
 .site-footer__copy {
   font-size: .8rem;
-  color: var(--color-primary-navy);
-  opacity: .85;
+  margin: 0;
+  padding-top: .5rem;
+  border-top: 1px solid var(--footer-line, rgba(0, 25, 89, .25));
+  max-width: none;
 }
-.site-footer__meta {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-}
-.footer-admin-btn {
-  font-size: .8rem;
-  font-weight: 600;
-  padding: .35rem .8rem;
-  border: 1px solid var(--color-primary-navy);
-  border-radius: 999px;
-  color: var(--color-primary-navy);
-}
-.footer-admin-btn:hover {
-  background: var(--color-primary-navy);
-  color: #fff;
-}
-.site-footer__version {
-  font-size: .75rem;
-  color: var(--color-primary-navy);
-  opacity: .6;
-}
+.site-footer__meta { display: flex; align-items: center; gap: .75rem; }
+.site-footer__version { font-size: .8rem; }
 
 @media (max-width: 720px) {
-  .site-nav__links {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    gap: 0;
-    background: var(--bg-nav);
-    padding: .5rem 1.25rem 1rem;
+  .site-footer { padding: 1rem 0; }
+  .site-footer__top { flex-direction: column; align-items: flex-start; }
+  .site-footer__copy { max-width: 40ch; }
+}
+
+/* Cambio de tema animado ("neblina" en barrido): el tema nuevo entra con un borde difuso que cruza
+   la pantalla, de izquierda a derecha al pasar a oscuro y de derecha a izquierda al pasar a claro
+   (--tema-dir lo fija el JS). Requiere View Transitions + @property; si faltan, el JS usa un fundido
+   de colores. Se omite con "reducir movimiento" (ver JS). */
+@property --niebla {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { animation: tema-niebla-vieja .65s ease-in-out both; }
+::view-transition-new(root) {
+  animation: tema-niebla-nueva .65s ease-in-out both;
+  -webkit-mask-image: linear-gradient(var(--tema-dir, to right), #000 calc(var(--niebla) - 30%), transparent var(--niebla));
+  mask-image: linear-gradient(var(--tema-dir, to right), #000 calc(var(--niebla) - 30%), transparent var(--niebla));
+}
+@keyframes tema-niebla-vieja {
+  from { filter: blur(0); }
+  to   { filter: blur(6px); }
+}
+@keyframes tema-niebla-nueva {
+  from { --niebla: 0%; filter: blur(10px); }
+  to   { --niebla: 130%; filter: blur(0); }
+}
+.tema-fundido,
+.tema-fundido *,
+.tema-fundido *::before,
+.tema-fundido *::after {
+  transition: background-color .4s ease, color .4s ease, border-color .4s ease, fill .4s ease, stroke .4s ease !important;
+}
+
+/* Interacciones al pasar el cursor o enfocar (links y botones). Solo con movimiento permitido. */
+@media (prefers-reduced-motion: no-preference) {
+  .btn,
+  .theme-toggle,
+  .nav-toggle,
+  .tabs a {
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease,
+                transform .2s ease, box-shadow .2s ease;
   }
-  .site-nav.is-open .site-nav__links { display: flex; }
-  .site-nav__links a { display: block; padding: .7rem 0; border-bottom: 1px solid rgba(255,255,255,.12); }
-  .nav-toggle { display: block; }
-  .site-footer .container { flex-direction: column; align-items: flex-start; }
+  .btn:hover,
+  .btn:focus-visible,
+  .theme-toggle:hover,
+  .nav-toggle:hover,
+  .tabs a:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 0 var(--btn-sombra, rgba(0, 25, 89, .35));
+  }
+  .btn:active,
+  .theme-toggle:active,
+  .nav-toggle:active,
+  .tabs a:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  .theme-toggle,
+  .nav-toggle { --btn-sombra: rgba(0, 0, 0, .35); }
+  [data-theme="dark"] .btn { --btn-sombra: rgba(255, 255, 255, .3); }
+
+  .site-nav__links a::after { transition: transform .25s ease; }
+  .site-nav__brand img { transition: transform .25s ease; }
+  .site-nav__brand:hover img,
+  .site-nav__brand:focus-visible img { transform: scale(1.05); }
+
+  .site-footer__social a { transition: transform .2s ease; }
+  .site-footer__label { transition: text-underline-offset .2s ease, text-decoration-thickness .2s ease; }
+  .site-footer__social a:hover,
+  .site-footer__social a:focus-visible { transform: translateY(-2px); }
+  .site-footer__social a:hover .site-footer__label,
+  .site-footer__social a:focus-visible .site-footer__label {
+    text-underline-offset: 6px;
+    text-decoration-thickness: 3px;
+  }
+  .site-footer__social img,
+  .icon-facebook { transition: transform .2s ease; }
+  .site-footer__social a:hover img,
+  .site-footer__social a:hover .icon-facebook,
+  .site-footer__social a:focus-visible img,
+  .site-footer__social a:focus-visible .icon-facebook { transform: scale(1.15) rotate(-6deg); }
+
+  .site-nav__links a { transition: padding-left .2s ease, background-color .2s ease; }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 720px) {
+  .site-nav__links a:hover { padding-left: 1rem; background: rgba(255, 255, 255, .08); }
+}
+
+/* Menu del celular: se desliza hacia abajo y los enlaces entran uno tras otro. */
+@media (prefers-reduced-motion: no-preference) and (max-width: 720px) {
+  .site-nav__links { transition: max-height .4s ease, visibility 0s linear .4s; }
+  .site-nav.is-open .site-nav__links { transition: max-height .4s ease, visibility 0s; }
+  .site-nav__links li {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .site-nav.is-open .site-nav__links li {
+    opacity: 1;
+    transform: none;
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .site-nav.is-open .site-nav__links li:nth-child(1) { transition-delay: .08s; }
+  .site-nav.is-open .site-nav__links li:nth-child(2) { transition-delay: .14s; }
+  .site-nav.is-open .site-nav__links li:nth-child(3) { transition-delay: .20s; }
+  .site-nav.is-open .site-nav__links li:nth-child(4) { transition-delay: .26s; }
+  .nav-toggle::after { transition: transform .3s ease; }
 }

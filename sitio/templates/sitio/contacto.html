@@ -4,78 +4,46 @@
 {% block title %}Contacto | Buses Suray{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/contacto.css' %}">
+<link rel="stylesheet" href="{% static 'css/contacto.css' %}?v={{ site_version }}">
 {% endblock %}
 
 {% block content %}
 <main class="container">
   <div class="page-header">
-    <h1>Ponte en Contacto</h1>
-    <p>Para consultar por horarios, información sobre encomiendas o servicios especiales, puedes usar los siguientes canales de comunicación:</p>
+    <h1>Contacto</h1>
+    <p>Para consultar por horarios, encomiendas o servicios especiales, llama o visita la oficina de tu ciudad.</p>
   </div>
 
   <div class="city-panels">
-    <section class="city-panel" style="background-image:url('{% static 'img/panel_aysen.webp' %}')">
-      <div class="city-panel__inner">
-        <h2>Puerto Aysén</h2>
-        <div class="tabs">
-          <button class="tab-btn is-active" type="button">Ubícanos</button>
-        </div>
-
-        {% for oficina in oficinas_aysen %}
-        <div class="office-block">
-          <strong>{{ oficina.get_tipo_display }}</strong>
-          <span>{{ oficina.direccion }}</span><br>
-          <span>{{ oficina.telefono }}</span><br>
-          {% if oficina.mapa_url %}<a href="{{ oficina.mapa_url }}" target="_blank" rel="noopener">Ver en el mapa</a>{% endif %}
-        </div>
-        {% endfor %}
-
-        {% for oficina in oficinas_aysen %}
-        <strong style="font-size:.8rem; display:block; {% if not forloop.first %}margin-top:.8rem{% endif %}">{{ oficina.get_tipo_display }}</strong>
+    {% for ciudad, oficinas in ciudades %}
+    <section class="city-panel">
+      <h2>{{ ciudad }}</h2>
+      {% for oficina in oficinas %}
+      <article class="office">
+        <h3>{{ oficina.get_tipo_display }}</h3>
+        <p class="office__address">{{ oficina.direccion }}</p>
+        <p class="office__actions">
+          <a class="btn" href="tel:{{ oficina.telefono|cut:' ' }}">Llamar {{ oficina.telefono }}</a>
+          {% if oficina.mapa_url %}<a class="btn" href="{{ oficina.mapa_url }}" target="_blank" rel="noopener">Ver en el mapa</a>{% endif %}
+        </p>
         <table class="hours-table">
-          <tr><th>Día</th><th>Horario</th></tr>
-          {% for h in oficina.horarios.all %}
-          <tr><td>{{ h.dia }}</td><td>{{ h.horario }}</td></tr>
-          {% endfor %}
+          <caption class="visually-hidden">Horario de atención</caption>
+          <tbody>
+            {% for h in oficina.horarios.all %}
+            <tr><th scope="row">{{ h.dia }}</th><td>{{ h.horario }}</td></tr>
+            {% endfor %}
+          </tbody>
         </table>
-        {% endfor %}
-      </div>
+      </article>
+      {% endfor %}
     </section>
-
-    <section class="city-panel city-panel--coyhaique" style="background-image:url('{% static 'img/panel_coyhaique.webp' %}')">
-      <div class="city-panel__inner">
-        <h2>Coyhaique</h2>
-        <div class="tabs">
-          <button class="tab-btn is-active" type="button">Ubícanos</button>
-        </div>
-
-        {% for oficina in oficinas_coyhaique %}
-        <div class="office-block">
-          <strong>{{ oficina.get_tipo_display }}</strong>
-          <span>{{ oficina.direccion }}</span><br>
-          <span>{{ oficina.telefono }}</span><br>
-          {% if oficina.mapa_url %}<a href="{{ oficina.mapa_url }}" target="_blank" rel="noopener">Ver en el mapa</a>{% endif %}
-        </div>
-        {% endfor %}
-
-        {% for oficina in oficinas_coyhaique %}
-        <strong style="font-size:.8rem; display:block; {% if not forloop.first %}margin-top:.8rem{% endif %}">{{ oficina.get_tipo_display }}</strong>
-        <table class="hours-table">
-          <tr><th>Día</th><th>Horario</th></tr>
-          {% for h in oficina.horarios.all %}
-          <tr><td>{{ h.dia }}</td><td>{{ h.horario }}</td></tr>
-          {% endfor %}
-        </table>
-        {% endfor %}
-      </div>
-    </section>
+    {% endfor %}
   </div>
 
   <section class="special-services">
-    <h3>Servicios Especiales</h3>
-    <p>¿Necesitas coordinar un servicio especial? Escríbenos directamente.</p>
-    <a href="mailto:suray.ltda@gmail.com?subject=Consulta desde suray.cl">suray.ltda@gmail.com</a>
+    <h2>Servicios especiales</h2>
+    <p>Si necesitas coordinar un servicio especial, escríbenos.</p>
+    <a class="btn" href="mailto:suray.ltda@gmail.com?subject=Consulta desde suray.cl">suray.ltda@gmail.com</a>
   </section>
 </main>
 {% endblock %}

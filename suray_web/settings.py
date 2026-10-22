@@ -182,6 +182,16 @@ DEPLOY_FLAG_FILE = config('DEPLOY_FLAG_FILE', default='/home/suraycl1/deploy_scr
 DEPLOY_LAUNCH_LOG = config('DEPLOY_LAUNCH_LOG', default='/home/suraycl1/deploy_scripts/webhook_launch.log')
 
 
+# Cache en archivos: el contador de intentos fallidos de /edit/ debe compartirse
+# entre los procesos de Passenger (LocMem es por proceso y no sirve).
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / '.django_cache',
+    },
+}
+
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

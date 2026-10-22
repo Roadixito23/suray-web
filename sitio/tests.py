@@ -91,3 +91,125 @@ class WebhookDeployTests(TestCase):
             r = self.post('push', {'ref': 'refs/heads/main'})
         self.assertEqual(r.status_code, 202)
         self.assertTrue(self.flag.exists())
+
+
+LOCMEM = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+STORAGES_SIMPLES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
+
+
+@override_settings(CACHES=LOCMEM, STORAGES=STORAGES_SIMPLES)
+class EditPanelTests(TestCase):
+    def setUp(self):
+        from datetime import time
+
+        from django.contrib.auth.models import User
+        from django.core.cache import cache
+
+        from .models import Horario, Ruta
+
+        cache.clear()
+        self.Horario = Horario
+        self.time = time
+        self.aysen = Ruta.objects.create(origen='Puerto Aysén', destino='Coyhaique')
+        self.coy = Ruta.objects.create(origen='Coyhaique', destino='Puerto Aysén')
+        self.staff = User.objects.create_user('staff', password='clave-segura-1', is_staff=True)
+        self.normal = User.objects.create_user('normal', password='clave-segura-1')
+        self.url = '/edit/horarios/lv/'
+
+    def tipo(self):
+        return self.Horario.TipoDia.LUNES_VIERNES
+
+    def entrar(self):
+        self.client.force_login(self.staff)
+
+    def horas(self, ruta):
+        return [
+            h.hora_salida.strftime('%H:%M')
+            for h in self.Horario.objects.filter(ruta=ruta, tipo_dia=self.tipo()).order_by('hora_salida')
+        ]
+
+    def test_anonimo_va_al_login(self):
+        r = self.client.get(self.url)
+        self.assertRedirects(r, '/edit/login/?next=/edit/horarios/lv/', fetch_redirect_response=False)
+
+    def test_no_staff_no_puede_entrar(self):
+        r = self.client.post('/edit/login/', {'username': 'normal', 'password': 'clave-segura-1'})
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.client.force_login(self.normal)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_staff_inicia_sesion(self):
+        r = self.client.post('/edit/login/', {'username': 'staff', 'password': 'clave-segura-1'})
+        self.assertRedirects(r, '/edit/', fetch_redirect_response=False)
+        self.assertEqual(self.client.get('/edit/').status_code, 302)
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_next_externo_se_ignora(self):
+        r = self.client.post(
+            '/edit/login/?next=https://malo.example/',
+            {'username': 'staff', 'password': 'clave-segura-1', 'next': 'https://malo.example/'},
+        )
+        self.assertRedirects(r, '/edit/', fetch_redirect_response=False)
+
+    def test_respuestas_no_indexables(self):
+        r = self.client.get('/edit/login/')
+        self.assertIn('noindex', r['X-Robots-Tag'])
+        self.assertIn('noindex', r.content.decode())
+        self.entrar()
+        r = self.client.get(self.url)
+        self.assertIn('noindex', r['X-Robots-Tag'])
+        self.assertIn('no-store', r['Cache-Control'])
+
+    def test_bloqueo_tras_5_fallos(self):
+        for _ in range(5):
+            r = self.client.post('/edit/login/', {'username': 'staff', 'password': 'mala'})
+            self.assertEqual(r.status_code, 200)
+        r = self.client.post('/edit/login/', {'username': 'staff', 'password': 'clave-segura-1'})
+        self.assertEqual(r.status_code, 429)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_guardar_crea_y_quita_horarios(self):
+        self.Horario.objects.create(ruta=self.aysen, tipo_dia=self.tipo(), hora_salida=self.time(6, 0))
+        self.Horario.objects.create(ruta=self.aysen, tipo_dia=self.tipo(), hora_salida=self.time(7, 0))
+        self.entrar()
+        r = self.client.post(self.url, {
+            f'horas_{self.aysen.id}': ['07:00', '8:15', '', '07:00'],
+            f'horas_{self.coy.id}': ['09:30'],
+        })
+        self.assertRedirects(r, self.url, fetch_redirect_response=False)
+        self.assertEqual(self.horas(self.aysen), ['07:00', '08:15'])
+        self.assertEqual(self.horas(self.coy), ['09:30'])
+
+    def test_hora_invalida_no_guarda_nada(self):
+        self.Horario.objects.create(ruta=self.aysen, tipo_dia=self.tipo(), hora_salida=self.time(6, 0))
+        self.entrar()
+        r = self.client.post(self.url, {
+            f'horas_{self.aysen.id}': ['25:99'],
+            f'horas_{self.coy.id}': ['09:30'],
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Usa el formato HH:MM')
+        self.assertEqual(self.horas(self.aysen), ['06:00'])
+        self.assertEqual(self.horas(self.coy), [])
+
+    def test_marca_horario_especial_solo_en_su_tipo(self):
+        sab = self.Horario.TipoDia.SABADO
+        self.Horario.objects.create(ruta=self.aysen, tipo_dia=sab, hora_salida=self.time(10, 0))
+        self.entrar()
+        self.client.post(self.url, {f'horas_{self.aysen.id}': ['06:00'], 'especial': 'on'})
+        self.assertTrue(self.Horario.objects.get(tipo_dia=self.tipo()).es_horario_especial)
+        self.assertFalse(self.Horario.objects.get(tipo_dia=sab).es_horario_especial)
+
+    def test_tipo_desconocido_da_404(self):
+        self.entrar()
+        self.assertEqual(self.client.get('/edit/horarios/xx/').status_code, 404)
+
+    def test_cerrar_sesion_requiere_post(self):
+        self.entrar()
+        self.assertEqual(self.client.get('/edit/logout/').status_code, 405)
+        r = self.client.post('/edit/logout/')
+        self.assertRedirects(r, '/edit/login/', fetch_redirect_response=False)
