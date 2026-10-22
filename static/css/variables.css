@@ -1,55 +1,70 @@
-/* Paleta extraída de main.dart (ver inventario_contenido.md, seccion 4) */
+/* Paleta de marca (ver inventario_contenido.md, seccion 4) y roles semanticos.
+   Todos los azules salen del mismo matiz (~222 grados) y todos los naranjas de la misma
+   familia, en dos escalas: clara y oscura. Los componentes usan solo los roles (--accent,
+   --ink, --header-fill...), nunca los hex, para que ambos modos queden en armonia. */
 :root {
-  --color-primary-navy: #001959;
-  --color-primary-orange: #F47200;
-  --color-light-navy: #1E3A8A;
-  --color-deep-orange: #E65100;
-  --color-soft-orange: #FFA726;
+  --color-primary-navy: #001959;   /* constante de marca (splash, mapa) */
+  --color-primary-orange: #F47200; /* constante de marca */
   --color-accent-blue: #3B82F6;
-  --color-bg-light: #F8FAFC;
-  --color-surface-white: #FFFFFF;
-  --color-text-dark: #1E293B;
-  --color-text-light: #64748B;
-  --color-border: #E2E8F0;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-
-  --color-weekday-mint: #06D6A0;
-  --color-weekday-mint-dark: #05B287;
-  --color-saturday-orange: #FFB703;
-  --color-saturday-orange-dark: #FB8500;
-  --color-sunday-red: #EF476F;
-  --color-sunday-red-dark: #D62246;
-
-  --color-footer-beige: #D4CFC4;
   --color-facebook-blue: #1877F2;
-  --color-chip-hoy: #1E88E5;
-  --color-chip-manana: #AB47BC;
-  --color-chip-manana-dark: #6A1B9A;
 
-  /* Roles semanticos (se remapean en modo oscuro) */
-  --bg-page: var(--color-bg-light);
-  --bg-surface: var(--color-surface-white);
-  --bg-nav: var(--color-primary-navy);
-  --text-body: var(--color-text-dark);
-  --text-muted: var(--color-text-light);
-  --border-color: var(--color-border);
+  /* Modo claro */
+  --bg-page: #F4F6FC;
+  --bg-surface: #FFFFFF;
+  --bg-nav: var(--header-fill);
+  --bg-panel: #001959;
+  --header-fill: #001959;
+  --footer-bg: #FFD9B8;      /* naranja pastel (claro) */
+  --footer-fg: #001959;
+  --footer-line: rgba(0, 25, 89, .25);
+  --ink: #001959;            /* texto y bordes de botones */
+  --ink-contrast: #FFFFFF;   /* texto sobre --ink */
+  --text-body: #0B1330;
+  --text-heading: #001959;
+  --text-muted: #46506B;
+  --text-accent: #B45309;    /* naranja legible como texto sobre fondo claro (AA) */
+  --border-color: #C9D3EA;
+  --focus-ring: #1D4ED8;
+  --accent: #F47200;         /* naranja: franjas, marcas, botones */
+  --accent-hover: #FF8A26;
+  --on-accent: #001959;      /* texto sobre --accent */
 }
 
 [data-theme="dark"] {
-  --color-dark-bg-1: #0A1628;
-  --color-dark-bg-2: #112240;
-  --color-dark-bg-3: #1A3050;
-
-  --bg-page: var(--color-dark-bg-1);
-  --bg-surface: var(--color-dark-bg-2);
-  --bg-nav: var(--color-dark-bg-1);
-  --text-body: #F1F5F9;
-  --text-muted: #94A3B8;
-  --border-color: var(--color-dark-bg-3);
+  --bg-page: #070F24;
+  --bg-surface: #0F1B3A;
+  --bg-panel: #16285A;
+  --header-fill: #16285A;
+  --footer-bg: #B4C7EE;      /* azul pastel (oscuro) */
+  --footer-fg: #0F1B3A;
+  --footer-line: rgba(15, 27, 58, .3);
+  --ink: #FFFFFF;
+  --ink-contrast: #16285A;
+  --text-body: #EEF2FF;
+  --text-heading: #FFFFFF;
+  --text-muted: #AAB6D3;
+  --text-accent: #FFA040;
+  --border-color: #2B3F70;
+  --focus-ring: #93C5FD;
+  --accent: #FF8A26;
+  --accent-hover: #FFA757;
+  --on-accent: #001959;
 }
 
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('../fonts/atkinson-hyperlegible-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('../fonts/atkinson-hyperlegible-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 @font-face {
   font-family: 'Hemiheads';
   src: url('../fonts/Hemiheads.otf') format('opentype');

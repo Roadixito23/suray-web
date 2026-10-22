@@ -1,0 +1,40 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>{% block title %}Panel{% endblock %} | Buses Suray</title>
+<link rel="stylesheet" href="{% static 'css/variables.css' %}?v={{ site_version }}">
+<link rel="stylesheet" href="{% static 'css/edit.css' %}?v={{ site_version }}">
+</head>
+<body>
+<header class="bar">
+  <div class="bar__inner">
+    <span class="bar__title">Panel de horarios</span>
+    {% if user.is_authenticated %}
+    <nav class="bar__nav" aria-label="Cuenta">
+      <a href="{% url 'sitio:inicio' %}">Ver sitio</a>
+      <span class="bar__user">{{ user.get_username }}</span>
+      <form method="post" action="{% url 'sitio:edit_logout' %}">
+        {% csrf_token %}
+        <button class="btn btn--small" type="submit">Cerrar sesión</button>
+      </form>
+    </nav>
+    {% endif %}
+  </div>
+</header>
+
+<main class="wrap">
+  {% if messages %}
+  <ul class="messages" role="status">
+    {% for message in messages %}
+    <li class="messages__item messages__item--{{ message.level_tag }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

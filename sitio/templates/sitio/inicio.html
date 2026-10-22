@@ -2,51 +2,37 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/inicio.css' %}">
+<link rel="stylesheet" href="{% static 'css/inicio.css' %}?v={{ site_version }}">
 {% endblock %}
 
 {% block content %}
-<header class="hero">
-  <div class="hero__slide"></div>
-  <div class="hero__slide"></div>
-  <div class="hero__content container">
-    <div class="hero__actions">
-      <a class="pill-btn" href="{% url 'sitio:contacto' %}">Ubícanos</a>
-      <a class="pill-btn" href="{% url 'sitio:ruta' %}">Ruta</a>
-    </div>
-    <a class="pill-btn pill-btn--primary" href="{% url 'sitio:horarios' %}">
-      <img src="{% static 'img/icono_bus_reloj.png' %}" alt="" width="18" height="18">
-      TODOS LOS HORARIOS
-    </a>
-  </div>
-</header>
-
 <main class="container">
-  <section class="status-card">
-    <div class="status-card__today">
-      <img src="{% static 'img/icono_calendario_reloj.png' %}" alt="" width="24" height="24">
-      <span>{{ hoy_label }}</span>
-    </div>
+  <h1 class="today">{{ hoy_label }}</h1>
 
-    <h3>Próximas Salidas:</h3>
-    <div class="departures">
-      {% for salida in salidas %}
-      <div class="departure-col">
-        <h4>Desde {{ salida.origen }}</h4>
-        <div class="departure-item">
-          <span>{{ salida.estado }}</span>
-          {% if salida.chip == "HOY" %}
-            <span class="chip chip--hoy">HOY</span>
-          {% elif salida.chip == "MAÑANA" %}
-            <span class="chip chip--manana">MAÑANA</span>
-          {% endif %}
-        </div>
-        <span class="weather-chip">Clima próximamente (OpenWeatherMap)</span>
-      </div>
-      {% empty %}
-      <p>Aún no hay horarios cargados. Agrégalos desde el <a href="/admin/">panel de administración</a>.</p>
-      {% endfor %}
-    </div>
-  </section>
+  <h2 class="board-title">Próximas salidas</h2>
+  <div class="board">
+    {% for salida in salidas %}
+    <section class="departure">
+      <h3>Desde {{ salida.origen }}</h3>
+      {% if salida.hora %}
+      <p class="departure__next">
+        <time class="departure__time">{{ salida.hora }}</time>
+        <span class="departure__day">{{ salida.dia }}</span>
+      </p>
+      {% if salida.despues %}
+      <p class="departure__later">Después: {{ salida.despues|join:" · " }}</p>
+      {% endif %}
+      {% else %}
+      <p class="departure__notice">{{ salida.aviso }}</p>
+      {% endif %}
+    </section>
+    {% empty %}
+    <p>Aún no hay horarios cargados.</p>
+    {% endfor %}
+  </div>
+
+  <nav class="quick-links" aria-label="Más información">
+    <a class="btn btn--brand" href="{% url 'sitio:horarios' %}">Todos los horarios</a>
+  </nav>
 </main>
 {% endblock %}

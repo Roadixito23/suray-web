@@ -30,7 +30,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 
 # Version mostrada en el footer: fecha (DD.MM.AA) + correlativo de actualizacion (01-99).
 # Actualizar manualmente aqui cada vez que se publique un cambio en el sitio.
-SITE_VERSION = '21.10.26-01'
+SITE_VERSION = '22.10.26-01'
 
 
 # Application definition
@@ -180,6 +180,16 @@ WEBHOOK_SECRET = config('WEBHOOK_SECRET', default='')
 DEPLOY_SCRIPT = config('DEPLOY_SCRIPT', default='/home/suraycl1/deploy_scripts/auto_deploy_test.py')
 DEPLOY_FLAG_FILE = config('DEPLOY_FLAG_FILE', default='/home/suraycl1/deploy_scripts/deploy.flag')
 DEPLOY_LAUNCH_LOG = config('DEPLOY_LAUNCH_LOG', default='/home/suraycl1/deploy_scripts/webhook_launch.log')
+
+
+# Cache en archivos: el contador de intentos fallidos de /edit/ debe compartirse
+# entre los procesos de Passenger (LocMem es por proceso y no sirve).
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / '.django_cache',
+    },
+}
 
 
 # Email

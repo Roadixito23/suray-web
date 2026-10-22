@@ -5,6 +5,7 @@ __pycache__/
 venv/
 staticfiles/
 media/
+.django_cache/
 
 # Solo referencia de lectura del repo Flutter original, nunca se commitea aqui.
 _legacy_reference/

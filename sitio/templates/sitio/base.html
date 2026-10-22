@@ -6,70 +6,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Buses Suray | Suray Cargo{% endblock %}</title>
 <meta name="description" content="Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique. Información de horarios, teléfonos, direcciones, paraderos en ruta 240 y servicios especiales.">
-<link rel="stylesheet" href="{% static 'css/variables.css' %}">
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/variables.css' %}?v={{ site_version }}">
+<link rel="stylesheet" href="{% static 'css/base.css' %}?v={{ site_version }}">
 {% block extra_css %}{% endblock %}
+<style>
+/* Criticos: inline para que el splash y el enlace de salto nunca se vean sin estilo. */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  background: #fff;
+  color: var(--color-primary-navy);
+  padding: .6rem 1rem;
+  font-weight: 700;
+  z-index: 100;
+}
+.skip-link:focus { left: .5rem; top: .5rem; }
+/* Splash: solo CSS (no depende de JS), se muestra en cada carga y se retira solo. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-navy);
+  animation: splash-out .45s ease 1s forwards;
+}
+.splash img {
+  width: min(60vw, 236px);
+  height: auto;
+  animation: splash-logo .6s ease-out both;
+}
+@keyframes splash-out {
+  to { opacity: 0; visibility: hidden; }
+}
+@keyframes splash-logo {
+  from { opacity: 0; transform: scale(.92); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash { animation-duration: .2s; animation-delay: .6s; }
+  .splash img { animation: none; }
+}
+</style>
 </head>
 <body>
+<div class="splash" aria-hidden="true">
+  <img src="{% static 'img/logo-480.webp' %}"
+       srcset="{% static 'img/logo-480.webp' %} 480w, {% static 'img/logo-960.webp' %} 960w"
+       sizes="(max-width: 393px) 60vw, 236px"
+       alt="" width="236" height="133">
+</div>
+<a class="skip-link" href="#contenido">Ir al contenido</a>
 
-<nav class="site-nav">
+<header class="site-header">
+<nav class="site-nav" aria-label="Principal">
   <div class="container">
     <a class="site-nav__brand" href="{% url 'sitio:inicio' %}">
-      <img src="{% static 'img/logo.png' %}" alt="Buses Suray" width="118" height="68">
+      <img src="{% static 'img/logo-240.webp' %}"
+           srcset="{% static 'img/logo-240.webp' %} 240w, {% static 'img/logo-480.webp' %} 480w"
+           sizes="(max-width: 720px) 78px, 114px"
+           alt="Buses Suray" width="114" height="64">
     </a>
-    <ul class="site-nav__links">
-      <li><a href="{% url 'sitio:inicio' %}" {% if request.resolver_match.url_name == 'inicio' %}class="is-active"{% endif %}>Inicio</a></li>
-      <li><a href="{% url 'sitio:horarios' %}" {% if request.resolver_match.url_name == 'horarios' %}class="is-active"{% endif %}>Horarios</a></li>
-      <li><a href="{% url 'sitio:ruta' %}" {% if request.resolver_match.url_name == 'ruta' %}class="is-active"{% endif %}>Ruta</a></li>
-      <li><a href="{% url 'sitio:contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a></li>
+    <ul class="site-nav__links" id="menu">
+      <li><a href="{% url 'sitio:inicio' %}" {% if request.resolver_match.url_name == 'inicio' %}class="is-active" aria-current="page"{% endif %}>Inicio</a></li>
+      <li><a href="{% url 'sitio:horarios' %}" {% if request.resolver_match.url_name == 'horarios' %}class="is-active" aria-current="page"{% endif %}>Horarios</a></li>
+      <li><a href="{% url 'sitio:ruta' %}" {% if request.resolver_match.url_name == 'ruta' %}class="is-active" aria-current="page"{% endif %}>Ruta</a></li>
+      <li><a href="{% url 'sitio:contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active" aria-current="page"{% endif %}>Contacto</a></li>
     </ul>
-    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" type="button">Oscuro</button>
-    <button class="nav-toggle" aria-label="Abrir menú" type="button">Menú</button>
+    <button class="theme-toggle" id="themeToggle" type="button">Modo oscuro</button>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="menu" type="button">Menú</button>
   </div>
 </nav>
+<svg class="header-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path class="header-wave__line" d="M0 102 C520 110 940 76 1440 38" />
+  <path class="header-wave__fill" d="M0 0 L1440 0 L1440 20 C940 58 520 92 0 84 Z" />
+</svg>
+</header>
 
-<div class="page-body">
+<div class="page-body" id="contenido">
 {% block content %}{% endblock %}
 </div>
 
+<svg class="footer-wave" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path class="footer-wave__line" d="M0 70 C520 78 940 48 1440 8" />
+  <path class="footer-wave__fill" d="M0 100 L0 88 C520 96 940 62 1440 24 L1440 100 Z" />
+</svg>
 <footer class="site-footer">
   <div class="container">
-    <div class="site-footer__social">
-      <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
-        <img src="{% static 'img/icono_instagram.png' %}" alt="Instagram" width="22" height="22" loading="lazy"> @buses.suray.cargo
-      </a>
-      <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
-        <span class="icon-facebook">f</span> buses.suray.cargo
-      </a>
+    <div class="site-footer__top">
+      <div class="site-footer__social">
+        <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
+          <img src="{% static 'img/icono_instagram.png' %}" alt="Instagram" width="22" height="22" loading="lazy"> <span class="site-footer__label">@buses.suray.cargo</span>
+        </a>
+        <a href="https://facebook.com/buses.suray.cargo" target="_blank" rel="noopener">
+          <span class="icon-facebook">f</span> <span class="site-footer__label">buses.suray.cargo</span>
+        </a>
+      </div>
+      <div class="site-footer__meta">
+        <span class="site-footer__version">v{{ site_version }}</span>
+      </div>
     </div>
     <p class="site-footer__copy">Copyright © 2026 - MMKT GRUPO SURAY - CMO dante@suray.cl</p>
-    <div class="site-footer__meta">
-      {% if user.is_authenticated %}
-        <a class="footer-admin-btn" href="{% url 'admin:index' %}">Panel admin</a>
-      {% else %}
-        <a class="footer-admin-btn" href="{% url 'admin:login' %}">Administrador</a>
-      {% endif %}
-      <span class="site-footer__version">v{{ site_version }}</span>
-    </div>
   </div>
 </footer>
 
 <script>
+  // Al volver con "atras" el navegador restaura la pagina sin recargarla: se reinicia el splash.
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    var splash = document.querySelector('.splash');
+    splash.style.animation = 'none';
+    void splash.offsetWidth;
+    splash.style.animation = '';
+    var logo = splash.querySelector('img');
+    logo.style.animation = 'none';
+    void logo.offsetWidth;
+    logo.style.animation = '';
+  });
+</script>
+<script>
   var btn = document.getElementById('themeToggle');
   var root = document.documentElement;
   function applyTheme(t) {
-    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = 'Claro'; }
-    else { root.removeAttribute('data-theme'); btn.textContent = 'Oscuro'; }
+    if (t === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = 'Modo claro'; }
+    else { root.removeAttribute('data-theme'); btn.textContent = 'Modo oscuro'; }
   }
-  applyTheme(localStorage.getItem('suray-theme') || 'light');
+  var saved = null;
+  try { saved = localStorage.getItem('suray-theme'); } catch (e) {}
+  applyTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   btn.addEventListener('click', function () {
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('suray-theme', next);
-    applyTheme(next);
+    try { localStorage.setItem('suray-theme', next); } catch (e) {}
+    var sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (sinMovimiento) { applyTheme(next); return; }
+    if (document.startViewTransition && window.CSS && CSS.registerProperty) {
+      // Barrido: a oscuro de izquierda a derecha, a claro de derecha a izquierda.
+      root.style.setProperty('--tema-dir', next === 'dark' ? 'to right' : 'to left');
+      document.startViewTransition(function () { applyTheme(next); });
+    } else {
+      // Respaldo: fundido de colores en los navegadores sin View Transitions.
+      root.classList.add('tema-fundido');
+      applyTheme(next);
+      setTimeout(function () { root.classList.remove('tema-fundido'); }, 500);
+    }
   });
 
   document.querySelector('.nav-toggle').addEventListener('click', function () {
-    document.querySelector('.site-nav').classList.toggle('is-open');
+    var open = document.querySelector('.site-nav').classList.toggle('is-open');
+    this.setAttribute('aria-expanded', open);
   });
 </script>
 {% block extra_js %}{% endblock %}

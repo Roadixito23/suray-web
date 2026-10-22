@@ -4,14 +4,14 @@
 {% block title %}Horarios | Buses Suray{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/horarios.css' %}">
+<link rel="stylesheet" href="{% static 'css/horarios.css' %}?v={{ site_version }}">
 {% endblock %}
 
 {% block content %}
 <main class="container">
   <div class="page-header">
     <h1>Horarios</h1>
-    <button class="btn-outline" id="downloadBtn" type="button">Descargar horarios</button>
+    <button class="btn" id="downloadBtn" type="button">Descargar como imagen</button>
   </div>
 
   <div id="schedulesCapture">
@@ -20,22 +20,21 @@
       {% if tarjeta.valor == 'LV' %}day-card--weekday
       {% elif tarjeta.valor == 'SAB' %}day-card--saturday
       {% else %}day-card--sunday{% endif %}">
-      {% if tarjeta.especial %}<span class="special-badge">HORARIO ESPECIAL</span>{% endif %}
       <h2>{{ tarjeta.etiqueta }}</h2>
-      <p class="day-card__subtitle">Salidas desde:</p>
+      {% if tarjeta.especial %}<p class="special-badge">Horario especial</p>{% endif %}
 
       {% for ciudad in tarjeta.ciudades %}
       <div class="city-block">
-        <h3>{{ ciudad.nombre }}</h3>
+        <h3>Salidas desde {{ ciudad.nombre }}</h3>
         {% if ciudad.horas %}
-        <div class="time-list">
+        <ul class="time-list">
           {% for hora in ciudad.horas %}
-          <span class="time-pill">{{ hora }}</span>
+          <li><time>{{ hora }}</time></li>
           {% endfor %}
-        </div>
+        </ul>
         {% else %}
         <p class="empty-state">
-          {% if tarjeta.valor == 'DF' %}Sin servicio<br>por feriado{% else %}Sin horarios{% endif %}
+          {% if tarjeta.valor == 'DF' %}Sin servicio por feriado.{% else %}Sin horarios.{% endif %}
         </p>
         {% endif %}
       </div>
@@ -47,17 +46,32 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-  document.getElementById('downloadBtn').addEventListener('click', function () {
-    html2canvas(document.getElementById('schedulesCapture')).then(function (canvas) {
-      var now = new Date();
-      var fecha = now.toISOString().slice(0, 10);
-      var hora = now.toTimeString().slice(0, 5).replace(':', '');
-      var link = document.createElement('a');
-      link.download = 'horarios_suray_' + fecha + '_' + hora + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+  // html2canvas pesa ~200 KB: solo se descarga cuando alguien pide la imagen.
+  var downloadBtn = document.getElementById('downloadBtn');
+  function loadHtml2canvas(cb) {
+    if (window.html2canvas) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = cb;
+    s.onerror = function () { downloadBtn.textContent = 'No se pudo descargar. Intenta de nuevo'; downloadBtn.disabled = false; };
+    document.head.appendChild(s);
+  }
+  downloadBtn.addEventListener('click', function () {
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Preparando imagen...';
+    loadHtml2canvas(function () {
+      html2canvas(document.getElementById('schedulesCapture')).then(function (canvas) {
+        var now = new Date();
+        var fecha = now.toISOString().slice(0, 10);
+        var hora = now.toTimeString().slice(0, 5).replace(':', '');
+        var link = document.createElement('a');
+        link.download = 'horarios_suray_' + fecha + '_' + hora + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        downloadBtn.textContent = 'Descargar como imagen';
+        downloadBtn.disabled = false;
+      });
     });
   });
 </script>

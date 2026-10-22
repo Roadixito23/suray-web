@@ -1,85 +1,28 @@
-.map-wrap {
-  position: relative;
-  margin: 1.5rem 0 3rem;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  background: var(--bg-surface);
-}
-.map-title {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 2;
-  background: rgba(0,25,89,.85);
-  color: #fff;
-  padding: .5rem 1rem;
-  border-radius: 10px;
-  font-family: 'Hemiheads', system-ui, sans-serif;
-  font-size: 1.1rem;
-}
-.map-quick-btns {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 2;
-  display: flex;
-  gap: .5rem;
-}
-.quick-btn {
-  border: none;
-  color: #fff;
-  font-weight: 700;
-  font-size: .75rem;
-  padding: .4rem .7rem;
-  border-radius: 8px;
-}
-.quick-btn--ays { background: var(--color-primary-orange); }
-.quick-btn--coy { background: var(--color-accent-blue); }
-
-.static-map,
-.live-map {
-  width: 100%;
-  height: 420px;
-  display: block;
-  background: linear-gradient(160deg, #DCEFE3, #CFE8DA);
-}
-.map-missing-key {
-  margin: 0;
-  padding: 3rem 1.5rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: .85rem;
-}
-.map-pin-label {
-  font-family: system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  fill: var(--color-primary-navy);
-}
-
 .terminal-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  padding-bottom: 3rem;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
 }
 .terminal-card {
-  border: 1px solid var(--border-color);
   background: var(--bg-surface);
-  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  border-top: 10px solid var(--accent);
   padding: 1.25rem;
 }
-.terminal-card p.eyebrow {
-  margin: 0;
-  font-size: .75rem;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: .05em;
+.terminal-card h2 { font-size: 1.3rem; margin-bottom: .5rem; }
+
+/* El mapa es opcional (necesita senal y API key): va despues de las direcciones. */
+.map-wrap { margin-bottom: 2rem; }
+.map-quick-btns { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+.live-map {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
 }
-.terminal-card h3 { margin: .2rem 0 .5rem; color: var(--color-primary-navy); }
-[data-theme="dark"] .terminal-card h3 { color: #fff; }
 
 @media (max-width: 700px) {
   .terminal-cards { grid-template-columns: 1fr; }
+  .live-map { height: 320px; }
 }

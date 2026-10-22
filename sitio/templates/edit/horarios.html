@@ -1,0 +1,76 @@
+{% extends "edit/base.html" %}
+
+{% block title %}Horarios{% endblock %}
+
+{% block content %}
+<h1>Horarios</h1>
+
+<nav class="tabs" aria-label="Tipo de día">
+  {% for slug, etiqueta in tabs %}
+  <a href="{% url 'sitio:edit_horarios' slug %}" {% if slug == tipo %}class="is-active" aria-current="page"{% endif %}>{{ etiqueta }}</a>
+  {% endfor %}
+</nav>
+
+<form method="post" id="horariosForm">
+  {% csrf_token %}
+
+  <div class="cities">
+    {% for bloque in bloques %}
+    <section class="city">
+      <h2>Salidas desde {{ bloque.ruta.origen }}</h2>
+      <ul class="rows" data-rows>
+        {% for fila in bloque.filas %}
+        <li class="row">
+          <input type="text" name="horas_{{ bloque.ruta.id }}" value="{{ fila.valor }}"
+                 inputmode="numeric" maxlength="5" placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]"
+                 aria-label="Hora de salida desde {{ bloque.ruta.origen }}"
+                 {% if fila.error %}aria-invalid="true"{% endif %}>
+          <button class="btn btn--small" type="button" data-remove>Quitar</button>
+          {% if fila.error %}<p class="error">{{ fila.error }}</p>{% endif %}
+        </li>
+        {% endfor %}
+        <li class="row">
+          <input type="text" name="horas_{{ bloque.ruta.id }}" value=""
+                 inputmode="numeric" maxlength="5" placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]"
+                 aria-label="Nueva hora de salida desde {{ bloque.ruta.origen }}">
+          <button class="btn btn--small" type="button" data-remove>Quitar</button>
+        </li>
+      </ul>
+      <button class="btn" type="button" data-add>Agregar hora</button>
+    </section>
+    {% endfor %}
+  </div>
+
+  <label class="check">
+    <input type="checkbox" name="especial" {% if especial %}checked{% endif %}>
+    <span>Marcar como horario especial</span>
+  </label>
+
+  <div class="actions">
+    <button class="btn btn--brand" type="submit">Guardar horarios</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Agregar/quitar filas. Sin JS el formulario sigue funcionando con la fila vacia de cada ciudad.
+  document.querySelectorAll('.city').forEach(function (city) {
+    var list = city.querySelector('[data-rows]');
+    city.addEventListener('click', function (e) {
+      if (e.target.matches('[data-remove]')) {
+        var row = e.target.closest('.row');
+        if (list.children.length > 1) { row.remove(); } else { row.querySelector('input').value = ''; }
+      }
+      if (e.target.matches('[data-add]')) {
+        var copy = list.lastElementChild.cloneNode(true);
+        copy.querySelector('input').value = '';
+        var err = copy.querySelector('.error'); if (err) err.remove();
+        copy.querySelector('input').removeAttribute('aria-invalid');
+        list.appendChild(copy);
+        copy.querySelector('input').focus();
+      }
+    });
+  });
+</script>
+{% endblock %}

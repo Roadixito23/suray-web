@@ -1,81 +1,57 @@
 .page-header {
-  padding: 2rem 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
 }
-.page-header h1 { margin: 0; color: var(--color-primary-navy); font-size: 1.9rem; }
-[data-theme="dark"] .page-header h1 { color: #fff; }
 
-.btn-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding: .55rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--color-primary-orange);
-  color: var(--color-primary-orange);
-  background: transparent;
-  font-weight: 600;
-  font-size: .85rem;
-}
-.btn-outline:hover { background: rgba(244,114,0,.08); }
-
+/* El color de la barra superior identifica el tipo de dia. */
 #schedulesCapture {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  padding-bottom: 3rem;
+  gap: 1rem;
+  padding-bottom: 2rem;
 }
 .day-card {
-  border-radius: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-top: 10px solid var(--day-color);
   padding: 1.25rem;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
 }
-.day-card--weekday { background: linear-gradient(160deg, var(--color-weekday-mint), var(--color-weekday-mint-dark)); }
-.day-card--saturday { background: linear-gradient(160deg, var(--color-saturday-orange), var(--color-saturday-orange-dark)); }
-.day-card--sunday { background: linear-gradient(160deg, var(--color-sunday-red), var(--color-sunday-red-dark)); }
-
-.day-card h2 { margin: 0 0 .15rem; font-size: 1.15rem; }
-.day-card__subtitle { font-size: .8rem; opacity: .9; margin: 0 0 1rem; }
+.day-card--weekday { --day-color: #05B287; }
+.day-card--saturday { --day-color: var(--accent); }
+.day-card--sunday { --day-color: #D62246; }
+.day-card h2 { font-size: 1.4rem; margin-bottom: .75rem; }
 
 .special-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(0,0,0,.25);
-  font-size: .65rem;
+  display: inline-block;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
-  padding: .25rem .5rem;
-  border-radius: 999px;
-  letter-spacing: .03em;
+  padding: .2rem .6rem;
+  margin: 0 0 1rem;
 }
 
-.city-block { margin-bottom: 1rem; }
+.city-block { margin-bottom: 1.5rem; }
+.city-block:last-child { margin-bottom: 0; }
 .city-block h3 {
-  font-size: .8rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  margin: 0 0 .5rem;
-  opacity: .9;
+  font-size: 1rem;
+  padding-bottom: .4rem;
+  margin-bottom: .75rem;
+  border-bottom: 2px solid var(--border-color);
 }
-.time-list { display: flex; flex-wrap: wrap; gap: .4rem; }
-.time-pill {
-  background: rgba(255,255,255,.18);
-  border-radius: 8px;
-  padding: .3rem .55rem;
-  font-size: .8rem;
-  font-weight: 600;
+.time-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: .5rem .75rem;
 }
-.empty-state {
-  font-size: .8rem;
-  opacity: .85;
-  font-style: italic;
+.time-list time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
+.empty-state { margin: 0; color: var(--text-muted); font-weight: 700; }
 
 @media (max-width: 900px) {
   #schedulesCapture { grid-template-columns: 1fr; }
