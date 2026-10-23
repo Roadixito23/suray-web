@@ -4,6 +4,7 @@
 {% block title %}Ruta | Buses Suray{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
 <link rel="stylesheet" href="{% static 'css/ruta.css' %}?v={{ site_version }}">
 {% endblock %}
 
@@ -27,7 +28,6 @@
     </section>
   </div>
 
-  {% if google_maps_api_key %}
   <div class="map-wrap">
     <div class="map-quick-btns">
       <button class="btn" id="btnAys" type="button">Ir a Aysén</button>
@@ -35,57 +35,46 @@
     </div>
     <div id="rutaMap" class="live-map" role="img" aria-label="Mapa interactivo de la ruta entre Puerto Aysén y Coyhaique"></div>
   </div>
-  {% endif %}
 </main>
 {% endblock %}
 
 {% block extra_js %}
-{% if google_maps_api_key %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
 <script>
-  window.SURAY_PUERTO_AYSEN = {{ puerto_aysen_json|safe }};
-  window.SURAY_COYHAIQUE = {{ coyhaique_json|safe }};
+  (function () {
+    var aysen = {{ puerto_aysen_json|safe }};
+    var coyhaique = {{ coyhaique_json|safe }};
 
-  function initRutaMap() {
-    var aysen = window.SURAY_PUERTO_AYSEN;
-    var coyhaique = window.SURAY_COYHAIQUE;
-    var center = { lat: (aysen.lat + coyhaique.lat) / 2, lng: (aysen.lng + coyhaique.lng) / 2 };
+    var map = L.map("rutaMap", { scrollWheelZoom: false });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 17,
+      // Django envia Referrer-Policy: same-origin y OSM bloquea (403) los tiles sin Referer.
+      referrerPolicy: "strict-origin-when-cross-origin",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
 
-    var map = new google.maps.Map(document.getElementById("rutaMap"), {
-      center: center,
-      zoom: 9,
-      streetViewControl: false,
-      mapTypeControl: false,
-      fullscreenControl: false,
-    });
+    function punto(pos, titulo, color) {
+      return L.circleMarker([pos.lat, pos.lng], {
+        radius: 9, color: "#fff", weight: 2, fillColor: color, fillOpacity: 1,
+      }).addTo(map).bindTooltip(titulo);
+    }
+    var markerAys = punto(aysen, "Puerto Aysén", "#001959");
+    var markerCoy = punto(coyhaique, "Coyhaique", "#3B82F6");
 
-    var markerAys = new google.maps.Marker({
-      position: aysen, map: map, title: "Puerto Aysén",
-      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#001959", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
-    });
-    var markerCoy = new google.maps.Marker({
-      position: coyhaique, map: map, title: "Coyhaique",
-      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
-    });
+    // La navegacion se limita a la zona de la ruta: no se puede alejar ni arrastrar fuera de ella.
+    var bounds = L.latLngBounds([aysen.lat, aysen.lng], [coyhaique.lat, coyhaique.lng]);
+    var limite = bounds.pad(0.4);
+    map.fitBounds(bounds, { padding: [40, 40] });
+    map.setMaxBounds(limite);
+    map.options.maxBoundsViscosity = 1;
+    map.setMinZoom(map.getBoundsZoom(limite));
 
-    new google.maps.Polyline({
-      path: [aysen, coyhaique],
-      strokeColor: "#F47200",
-      strokeOpacity: 0,
-      icons: [{
-        icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
-        offset: "0", repeat: "14px",
-      }],
-      map: map,
-    });
-
-    document.getElementById("btnAys").addEventListener("click", function () {
-      map.panTo(aysen); map.setZoom(13); google.maps.event.trigger(markerAys, "click");
-    });
-    document.getElementById("btnCoy").addEventListener("click", function () {
-      map.panTo(coyhaique); map.setZoom(13); google.maps.event.trigger(markerCoy, "click");
-    });
-  }
+    function ir(pos, marker) {
+      map.setView([pos.lat, pos.lng], 15);
+      marker.openTooltip();
+    }
+    document.getElementById("btnAys").addEventListener("click", function () { ir(aysen, markerAys); });
+    document.getElementById("btnCoy").addEventListener("click", function () { ir(coyhaique, markerCoy); });
+  })();
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initRutaMap" async defer></script>
-{% endif %}
 {% endblock %}

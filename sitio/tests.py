@@ -254,3 +254,15 @@ class ClimaTests(TestCase):
     def test_inicio_no_se_rompe_sin_clima(self):
         with mock.patch('sitio.clima.urlopen', side_effect=OSError('sin red')):
             self.assertEqual(self.client.get('/').status_code, 200)
+
+
+class RutaMapaTests(TestCase):
+    @override_settings(STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    })
+    def test_mapa_se_muestra_sin_api_key(self):
+        resp = self.client.get('/ruta/')
+        self.assertContains(resp, 'id="rutaMap"')
+        self.assertContains(resp, 'vendor/leaflet/leaflet.js')
+        self.assertNotContains(resp, 'maps.googleapis.com')
