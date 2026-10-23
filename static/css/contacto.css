@@ -35,10 +35,7 @@
 .hours-table th { font-weight: 400; color: var(--text-muted); padding-right: 1rem; }
 .hours-table td { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.special-services {
-  border: 2px solid var(--border-color);
-  padding: 1.25rem;
-}
+.special-services { padding: 1.25rem; }
 .special-services h2 { font-size: 1.3rem; margin-bottom: .5rem; }
 
 @media (max-width: 780px) {

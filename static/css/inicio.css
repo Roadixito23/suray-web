@@ -1,5 +1,5 @@
-.today { font-size: 1.4rem; margin: 1.5rem 0 1.75rem; }
-.board-title { font-size: 1rem; color: var(--text-muted); margin-bottom: .75rem; }
+.today { font-size: 1.4rem; margin: 1.5rem 0 1.25rem; }
+.board-title { display: inline-block; font-size: 1rem; color: var(--text-muted); margin-bottom: .75rem; padding: .4rem 1rem; }
 
 /* Un panel por ciudad; la barra naranja marca la proxima salida. */
 .board {
