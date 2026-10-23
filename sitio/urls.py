@@ -13,4 +13,8 @@ urlpatterns = [
     path("edit/login/", views_edit.edit_login, name="edit_login"),
     path("edit/logout/", views_edit.edit_logout, name="edit_logout"),
     path("edit/horarios/<str:tipo>/", views_edit.edit_horarios, name="edit_horarios"),
+    path("edit/oficinas/", views_edit.edit_oficinas, name="edit_oficinas"),
+    path("edit/oficinas/<int:pk>/", views_edit.edit_oficinas, name="edit_oficina"),
+    path("edit/feriados/", views_edit.edit_feriados, name="edit_feriados"),
+    path("edit/cuenta/", views_edit.edit_cuenta, name="edit_cuenta"),
 ]

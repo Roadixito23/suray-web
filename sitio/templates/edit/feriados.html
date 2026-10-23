@@ -1,0 +1,39 @@
+{% extends "edit/base.html" %}
+
+{% block title %}Feriados{% endblock %}
+
+{% block content %}
+<h1>Feriados</h1>
+<p class="hint">En un feriado se usa el horario de domingo. Si marcas «sin servicio», la portada avisa que no hay recorrido.</p>
+
+<section class="card">
+  <h2>Agregar feriado</h2>
+  <form method="post" class="inline-form">
+    {% csrf_token %}
+    {% for campo in form %}
+    {% if campo.name == 'sin_servicio' %}
+    <label class="check check--warn">{{ campo }}<span>{{ campo.label }}</span></label>
+    {% else %}
+    <label class="field">
+      <span>{{ campo.label }}</span>
+      {{ campo }}
+      {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </label>
+    {% endif %}
+    {% endfor %}
+    <button class="btn btn--brand" type="submit">+ Agregar feriado</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Próximos</h2>
+  {% include "edit/_feriados_lista.html" with feriados=proximos vacio="No hay feriados próximos cargados." %}
+</section>
+
+{% if pasados %}
+<details class="card">
+  <summary>Anteriores ({{ pasados|length }})</summary>
+  {% include "edit/_feriados_lista.html" with feriados=pasados vacio="" %}
+</details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "edit/base.html" %}
+
+{% block title %}Oficinas{% endblock %}
+
+{% block content %}
+<h1>Oficinas</h1>
+<p class="hint">Cada oficina se guarda por separado con su propio botón.</p>
+
+<div class="offices">
+  {% for t in tarjetas %}
+  <section class="office" id="oficina-{{ t.oficina.pk }}">
+    <h2>{{ t.oficina.ciudad }} <small>{{ t.oficina.get_tipo_display }}</small></h2>
+    <form method="post" action="{% url 'sitio:edit_oficina' t.oficina.pk %}">
+      {% csrf_token %}
+      {% for campo in t.form %}
+      <label class="field">
+        <span>{{ campo.label }}</span>
+        {{ campo }}
+        {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+      </label>
+      {% endfor %}
+
+      <fieldset class="hours">
+        <legend>Horario de atención</legend>
+        {{ t.horarios.management_form }}
+        {% for e in t.horarios.non_form_errors %}<p class="error">{{ e }}</p>{% endfor %}
+        <ul class="hour-rows" data-rows>
+          {% for f in t.horarios %}
+          <li class="hour-row">
+            {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+            <input type="text" name="{{ f.dia.html_name }}" value="{{ f.dia.value|default_if_none:'' }}" placeholder="Día (Lun-Vie)" aria-label="Día" maxlength="50"{% if f.dia.errors %} aria-invalid="true"{% endif %}>
+            <input type="text" name="{{ f.horario.html_name }}" value="{{ f.horario.value|default_if_none:'' }}" placeholder="06:30–19:00" aria-label="Horario" maxlength="100"{% if f.horario.errors %} aria-invalid="true"{% endif %}>
+            <input type="checkbox" name="{{ f.DELETE.html_name }}" hidden data-delete{% if f.DELETE.value %} checked{% endif %}>
+            <button class="btn btn--small btn--danger" type="button" data-remove>Quitar</button>
+            {% for e in f.dia.errors %}<p class="error">{{ e }}</p>{% endfor %}
+            {% for e in f.horario.errors %}<p class="error">{{ e }}</p>{% endfor %}
+          </li>
+          {% endfor %}
+        </ul>
+        <template data-template>
+          <li class="hour-row">
+            {% for h in t.horarios.empty_form.hidden_fields %}{{ h }}{% endfor %}
+            <input type="text" name="{{ t.horarios.empty_form.dia.html_name }}" placeholder="Día (Lun-Vie)" aria-label="Día" maxlength="50">
+            <input type="text" name="{{ t.horarios.empty_form.horario.html_name }}" placeholder="06:30–19:00" aria-label="Horario" maxlength="100">
+            <input type="checkbox" name="{{ t.horarios.empty_form.DELETE.html_name }}" hidden data-delete>
+            <button class="btn btn--small btn--danger" type="button" data-remove>Quitar</button>
+          </li>
+        </template>
+        <button class="btn btn--small btn--add" type="button" data-add>+ Agregar fila</button>
+      </fieldset>
+
+      <div class="actions"><button class="btn btn--brand" type="submit">Guardar esta oficina</button></div>
+    </form>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Agregar/quitar filas de horario. "Quitar" marca la casilla de borrado y oculta la fila.
+  document.querySelectorAll('.office').forEach(function (office) {
+    var list = office.querySelector('[data-rows]');
+    var total = office.querySelector('input[name$="-TOTAL_FORMS"]');
+    office.addEventListener('click', function (e) {
+      if (e.target.matches('[data-remove]')) {
+        var row = e.target.closest('.hour-row');
+        row.querySelector('[data-delete]').checked = true;
+        row.hidden = true;
+      }
+      if (e.target.matches('[data-add]')) {
+        var html = office.querySelector('[data-template]').innerHTML.replace(/__prefix__/g, total.value);
+        list.insertAdjacentHTML('beforeend', html);
+        total.value = parseInt(total.value, 10) + 1;
+        list.lastElementChild.querySelector('input[type="text"]').focus();
+      }
+    });
+  });
+</script>
+{% endblock %}

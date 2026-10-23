@@ -1,0 +1,15 @@
+{% if feriados %}
+<ul class="list">
+  {% for f in feriados %}
+  <li class="list__item">
+    <span class="list__main"><strong>{{ f.fecha|date:"d/m/Y" }}</strong> · {{ f.nombre }}{% if f.sin_servicio %} <em class="tag">Sin servicio</em>{% endif %}</span>
+    <form method="post" onsubmit="return confirm('¿Eliminar este feriado?');">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="eliminar">
+      <input type="hidden" name="feriado" value="{{ f.pk }}">
+      <button class="btn btn--small btn--danger" type="submit">Eliminar</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p>{{ vacio }}</p>{% endif %}

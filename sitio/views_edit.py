@@ -4,16 +4,19 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.cache import cache
+from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Max
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
-from .forms import EditAuthenticationForm
-from .models import Horario, Ruta
+from .forms import CuentaForm, EditAuthenticationForm, FeriadoForm, HorarioOficinaFormSet, OficinaForm
+from .models import Feriado, Horario, Oficina, Ruta
 
 MAX_INTENTOS = 5
 BLOQUEO_SEGUNDOS = 15 * 60
@@ -164,3 +167,85 @@ def edit_horarios(request, tipo):
         "bloques": bloques,
         "especial": especial,
     })
+
+
+def _tarjeta_oficina(oficina, post=None):
+    return {
+        "oficina": oficina,
+        "form": OficinaForm(post, instance=oficina, prefix=f"of{oficina.pk}"),
+        "horarios": HorarioOficinaFormSet(post, instance=oficina, prefix=f"h{oficina.pk}"),
+    }
+
+
+@no_indexable
+@solo_staff
+@require_http_methods(["GET", "POST"])
+def edit_oficinas(request, pk=None):
+    if request.method == "POST" and pk is None:
+        raise Http404
+    tarjetas = []
+    for oficina in Oficina.objects.order_by("ciudad", "orden"):
+        if request.method == "POST" and oficina.pk == pk:
+            tarjeta = _tarjeta_oficina(oficina, request.POST)
+            if tarjeta["form"].is_valid() and tarjeta["horarios"].is_valid():
+                with transaction.atomic():
+                    tarjeta["form"].save()
+                    formset = tarjeta["horarios"]
+                    nuevos = formset.save(commit=False)
+                    for obj in formset.deleted_objects:
+                        obj.delete()
+                    siguiente = (oficina.horarios.aggregate(m=Max("orden"))["m"] or 0) + 1
+                    for obj in nuevos:
+                        if obj.pk is None:
+                            obj.orden = siguiente
+                            siguiente += 1
+                        obj.save()
+                messages.success(request, f"Guardado: {oficina}.")
+                return HttpResponseRedirect(f"{reverse('sitio:edit_oficinas')}#oficina-{oficina.pk}")
+            messages.error(request, f"Revisa los campos marcados de {oficina}. No se guardó nada.")
+        else:
+            tarjeta = _tarjeta_oficina(oficina)
+        tarjetas.append(tarjeta)
+    return render(request, "edit/oficinas.html", {"tarjetas": tarjetas})
+
+
+@no_indexable
+@solo_staff
+@require_http_methods(["GET", "POST"])
+def edit_feriados(request):
+    form = FeriadoForm()
+    if request.method == "POST":
+        if request.POST.get("accion") == "eliminar":
+            feriado = get_object_or_404(Feriado, pk=request.POST.get("feriado"))
+            feriado.delete()
+            messages.success(request, f"Feriado eliminado: {feriado.nombre}.")
+            return redirect("sitio:edit_feriados")
+        form = FeriadoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Feriado agregado.")
+            return redirect("sitio:edit_feriados")
+        messages.error(request, "Revisa los campos marcados. No se guardó nada.")
+    hoy = timezone.localdate()
+    return render(request, "edit/feriados.html", {
+        "form": form,
+        "proximos": Feriado.objects.filter(fecha__gte=hoy).order_by("fecha"),
+        "pasados": Feriado.objects.filter(fecha__lt=hoy).order_by("-fecha"),
+    })
+
+
+@no_indexable
+@solo_staff
+@require_http_methods(["GET", "POST"])
+def edit_cuenta(request):
+    if request.method == "POST":
+        form = CuentaForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Cuenta actualizada.")
+            return redirect("sitio:edit_cuenta")
+        messages.error(request, "Revisa los campos marcados. No se guardó nada.")
+    else:
+        form = CuentaForm(request.user)
+    return render(request, "edit/cuenta.html", {"form": form})

@@ -1,0 +1,22 @@
+{% extends "edit/base.html" %}
+
+{% block title %}Mi cuenta{% endblock %}
+
+{% block content %}
+<h1>Mi cuenta</h1>
+<p class="hint">Cambia tu usuario o tu contraseña. Para guardar necesitas tu contraseña actual.</p>
+
+<section class="card card--narrow">
+  <form method="post">
+    {% csrf_token %}
+    {% for campo in form %}
+    <label class="field">
+      <span>{{ campo.label }}</span>
+      {{ campo }}
+      {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </label>
+    {% endfor %}
+    <button class="btn btn--brand" type="submit">Guardar cambios</button>
+  </form>
+</section>
+{% endblock %}

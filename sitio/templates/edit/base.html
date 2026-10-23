@@ -8,10 +8,10 @@
 <link rel="stylesheet" href="{% static 'css/variables.css' %}?v={{ site_version }}">
 <link rel="stylesheet" href="{% static 'css/edit.css' %}?v={{ site_version }}">
 </head>
-<body>
+<body data-sec="{{ request.resolver_match.url_name }}">
 <header class="bar">
   <div class="bar__inner">
-    <span class="bar__title">Panel de horarios</span>
+    <span class="bar__title">Panel de administración</span>
     {% if user.is_authenticated %}
     <nav class="bar__nav" aria-label="Cuenta">
       <a href="{% url 'sitio:inicio' %}">Ver sitio</a>
@@ -24,6 +24,17 @@
     {% endif %}
   </div>
 </header>
+
+{% if user.is_authenticated %}
+<nav class="sections" aria-label="Secciones">
+  {% with n=request.resolver_match.url_name %}
+  <a href="{% url 'sitio:edit_horarios' 'lv' %}" {% if n == 'edit_horarios' %}class="is-active" aria-current="page"{% endif %}>Horarios de salida</a>
+  <a href="{% url 'sitio:edit_oficinas' %}" {% if n == 'edit_oficinas' or n == 'edit_oficina' %}class="is-active" aria-current="page"{% endif %}>Oficinas</a>
+  <a href="{% url 'sitio:edit_feriados' %}" {% if n == 'edit_feriados' %}class="is-active" aria-current="page"{% endif %}>Feriados</a>
+  <a href="{% url 'sitio:edit_cuenta' %}" {% if n == 'edit_cuenta' %}class="is-active" aria-current="page"{% endif %}>Mi cuenta</a>
+  {% endwith %}
+</nav>
+{% endif %}
 
 <main class="wrap">
   {% if messages %}

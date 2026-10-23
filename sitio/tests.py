@@ -266,3 +266,99 @@ class RutaMapaTests(TestCase):
         self.assertContains(resp, 'id="rutaMap"')
         self.assertContains(resp, 'vendor/leaflet/leaflet.js')
         self.assertNotContains(resp, 'maps.googleapis.com')
+
+
+@override_settings(CACHES=LOCMEM, STORAGES=STORAGES_SIMPLES)
+class EditAdministracionTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        from .models import Feriado, HorarioOficina, Oficina
+
+        self.Feriado, self.HorarioOficina = Feriado, HorarioOficina
+        self.staff = User.objects.create_user('staff', password='clave-segura-1', is_staff=True)
+        self.oficina = Oficina.objects.create(
+            ciudad='Coyhaique', tipo='PJ', direccion='Calle 1', telefono='+56 1', orden=1)
+        self.h1 = HorarioOficina.objects.create(oficina=self.oficina, dia='Lun-Vie', horario='06:30–19:00', orden=1)
+        self.h2 = HorarioOficina.objects.create(oficina=self.oficina, dia='Domingo', horario='Cerrado', orden=2)
+
+    def entrar(self):
+        self.client.force_login(self.staff)
+
+    def test_secciones_exigen_login(self):
+        for url in ('/edit/oficinas/', '/edit/feriados/', '/edit/cuenta/'):
+            self.assertEqual(self.client.get(url).status_code, 302, url)
+        self.assertEqual(self.client.post(f'/edit/oficinas/{self.oficina.pk}/', {}).status_code, 302)
+
+    def datos_oficina(self, **extra):
+        p, o = f'h{self.oficina.pk}', f'of{self.oficina.pk}'
+        datos = {
+            f'{o}-direccion': 'Calle 2', f'{o}-telefono': '+56 2', f'{o}-mapa_url': '',
+            f'{p}-TOTAL_FORMS': '3', f'{p}-INITIAL_FORMS': '2', f'{p}-MIN_NUM_FORMS': '0', f'{p}-MAX_NUM_FORMS': '1000',
+            f'{p}-0-id': self.h1.pk, f'{p}-0-oficina': self.oficina.pk, f'{p}-0-dia': 'Lun-Vie', f'{p}-0-horario': '07:00–20:00',
+            f'{p}-1-id': self.h2.pk, f'{p}-1-oficina': self.oficina.pk, f'{p}-1-dia': 'Domingo', f'{p}-1-horario': 'Cerrado',
+            f'{p}-1-DELETE': 'on',
+            f'{p}-2-id': '', f'{p}-2-oficina': self.oficina.pk, f'{p}-2-dia': 'Sábado', f'{p}-2-horario': '09:00–13:00',
+        }
+        datos.update(extra)
+        return datos
+
+    def test_pagina_oficinas_muestra_horarios(self):
+        self.entrar()
+        r = self.client.get('/edit/oficinas/')
+        self.assertContains(r, 'Calle 1')
+        self.assertContains(r, '06:30–19:00')
+
+    def test_guardar_oficina_edita_agrega_y_quita_horarios(self):
+        self.entrar()
+        r = self.client.post(f'/edit/oficinas/{self.oficina.pk}/', self.datos_oficina())
+        self.assertRedirects(r, f'/edit/oficinas/#oficina-{self.oficina.pk}', fetch_redirect_response=False)
+        self.oficina.refresh_from_db()
+        self.assertEqual(self.oficina.direccion, 'Calle 2')
+        filas = [(h.dia, h.horario) for h in self.oficina.horarios.all()]
+        self.assertEqual(filas, [('Lun-Vie', '07:00–20:00'), ('Sábado', '09:00–13:00')])
+
+    def test_oficina_invalida_no_guarda(self):
+        self.entrar()
+        datos = self.datos_oficina(**{f'h{self.oficina.pk}-0-horario': '', f'of{self.oficina.pk}-mapa_url': 'no-es-url'})
+        r = self.client.post(f'/edit/oficinas/{self.oficina.pk}/', datos)
+        self.assertEqual(r.status_code, 200)
+        self.oficina.refresh_from_db()
+        self.assertEqual(self.oficina.direccion, 'Calle 1')
+        self.assertEqual(self.oficina.horarios.count(), 2)
+
+    def test_feriados_agregar_duplicado_y_eliminar(self):
+        self.entrar()
+        r = self.client.post('/edit/feriados/', {'fecha': '2099-05-01', 'nombre': 'Día del Trabajo', 'sin_servicio': 'on'})
+        self.assertRedirects(r, '/edit/feriados/', fetch_redirect_response=False)
+        f = self.Feriado.objects.get(fecha='2099-05-01')
+        self.assertTrue(f.sin_servicio)
+        r = self.client.post('/edit/feriados/', {'fecha': '2099-05-01', 'nombre': 'Otro'})
+        self.assertContains(r, 'Ya hay un feriado en esa fecha.')
+        self.client.post('/edit/feriados/', {'accion': 'eliminar', 'feriado': f.pk})
+        self.assertFalse(self.Feriado.objects.exists())
+
+    def test_cuenta_cambia_usuario_y_clave_sin_cerrar_sesion(self):
+        self.entrar()
+        r = self.client.post('/edit/cuenta/', {
+            'username': 'nuevo', 'password_actual': 'mala', 'password1': '', 'password2': ''})
+        self.assertContains(r, 'La contraseña actual no es correcta.')
+        r = self.client.post('/edit/cuenta/', {
+            'username': 'nuevo', 'password_actual': 'clave-segura-1',
+            'password1': 'otra-clave-larga-9', 'password2': 'otra-clave-larga-9'})
+        self.assertRedirects(r, '/edit/cuenta/', fetch_redirect_response=False)
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.username, 'nuevo')
+        self.assertTrue(self.staff.check_password('otra-clave-larga-9'))
+        self.assertEqual(self.client.get('/edit/cuenta/').status_code, 200)
+
+    def test_cuenta_rechaza_clave_debil_y_usuario_repetido(self):
+        from django.contrib.auth.models import User
+        User.objects.create_user('otro')
+        self.entrar()
+        r = self.client.post('/edit/cuenta/', {
+            'username': 'otro', 'password_actual': 'clave-segura-1', 'password1': '123', 'password2': '123'})
+        self.assertContains(r, 'Ese nombre de usuario ya existe.')
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.username, 'staff')
+        self.assertTrue(self.staff.check_password('clave-segura-1'))

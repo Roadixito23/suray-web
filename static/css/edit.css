@@ -1,5 +1,19 @@
 /* Panel /edit/: mismo lenguaje visual que el sitio (ver variables.css), sin splash ni nav publica. */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Colores por funcion: cada seccion tiene su tono (--sec) y cada accion el suyo.
+   Guardar = naranja de marca, agregar = azul, quitar/eliminar = rojo, ok = verde, aviso = ambar. */
+:root {
+  --c-ok: #05B287;
+  --c-danger: #D62246;
+  --c-add: #1D4ED8;
+  --c-warn: #B45309;
+  --sec: var(--accent);
+}
+body[data-sec="edit_horarios"] { --sec: #3B82F6; }
+body[data-sec="edit_oficinas"], body[data-sec="edit_oficina"] { --sec: #05B287; }
+body[data-sec="edit_feriados"] { --sec: #8B5CF6; }
+body[data-sec="edit_cuenta"] { --sec: #64748B; }
 html { font-size: 118.75%; }
 body {
   margin: 0;
@@ -61,12 +75,14 @@ button, input { font: inherit; }
 
 .messages { margin: 0 0 1.25rem; padding: 0; list-style: none; }
 .messages__item { padding: .75rem 1rem; font-weight: 700; border-left: 8px solid; background: var(--bg-surface); }
-.messages__item--success { border-color: #05B287; }
-.messages__item--error { border-color: #D62246; }
+.messages__item--success { border-color: var(--c-ok); background: color-mix(in srgb, var(--c-ok) 14%, var(--bg-surface)); }
+.messages__item--success::before { content: "✓ "; color: var(--c-ok); }
+.messages__item--error { border-color: var(--c-danger); background: color-mix(in srgb, var(--c-danger) 12%, var(--bg-surface)); }
+.messages__item--error::before { content: "! "; color: var(--c-danger); }
 .error { color: #B91C1C; font-weight: 700; margin: .25rem 0 0; }
 
 /* Login */
-.login { max-width: 24rem; margin: 2rem auto; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 10px solid var(--accent); padding: 1.5rem; }
+.login { max-width: 24rem; margin: 2rem auto; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 10px solid var(--sec); padding: 1.5rem; }
 .field { display: block; margin-bottom: 1rem; }
 .field span { display: block; font-weight: 700; margin-bottom: .25rem; }
 .field input,
@@ -94,10 +110,10 @@ button, input { font: inherit; }
   text-decoration: none;
   border-radius: 6px;
 }
-.tabs a.is-active { background: var(--bg-panel); border-color: var(--bg-panel); color: #fff; }
+.tabs a.is-active { background: var(--sec); border-color: var(--sec); color: #fff; }
 
 .cities { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-.city { background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 10px solid var(--accent); padding: 1.25rem; }
+.city { background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 10px solid var(--sec); padding: 1.25rem; }
 .rows { list-style: none; margin: 0 0 1rem; padding: 0; }
 .row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; margin-bottom: .5rem; align-items: center; }
 .row .error { grid-column: 1 / -1; margin: 0; }
@@ -112,3 +128,62 @@ button, input { font: inherit; }
   .cities { grid-template-columns: 1fr; }
   .actions .btn { width: 100%; }
 }
+
+/* Secciones del panel */
+.sections { background: var(--bg-panel); }
+.sections { display: flex; flex-wrap: wrap; gap: .25rem; padding: 0 max(1.25rem, calc((100% - 1000px) / 2 + 1.25rem)); }
+.sections a { color: #fff; text-decoration: none; font-weight: 700; padding: .8rem 1rem; border-bottom: 4px solid transparent; }
+.sections a:hover { background: rgba(255,255,255,.1); }
+.sections a { border-bottom-color: color-mix(in srgb, var(--s, #fff) 35%, transparent); }
+.sections a.is-active { background: rgba(255,255,255,.12); }
+.sections a[href*="horarios"] { --s: #3B82F6; }
+.sections a[href*="oficinas"] { --s: #05B287; }
+.sections a[href*="feriados"] { --s: #8B5CF6; }
+.sections a[href*="cuenta"] { --s: #94A3B8; }
+.sections a.is-active { border-bottom-color: var(--s); }
+.hint { color: var(--text-muted); margin: -.5rem 0 1.25rem; }
+
+.card, .office { background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 10px solid var(--sec); padding: 1.25rem; margin-bottom: 1rem; }
+.card--narrow { max-width: 28rem; }
+.office h2 small { display: block; font-size: .85rem; font-weight: 400; color: var(--text-muted); }
+.offices { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.offices .office { margin-bottom: 0; }
+.field input[type="text"], .field input[type="url"], .field input[type="date"], .field input[type="password"] {
+  width: 100%; min-height: 3rem; padding: .4rem .75rem; border: 2px solid var(--border-color);
+  border-radius: 6px; background: var(--bg-page); color: var(--text-body);
+}
+.hours { border: 0; padding: 0; margin: 0 0 1rem; }
+.hours legend { font-weight: 700; margin-bottom: .5rem; padding: 0; }
+.hour-rows { list-style: none; margin: 0 0 .75rem; padding: 0; }
+.hour-row { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: .5rem; margin-bottom: .5rem; align-items: center; }
+.hour-row[hidden] { display: none; }
+.hour-row input[type="text"] { min-height: 3rem; padding: .4rem .6rem; border: 2px solid var(--border-color); border-radius: 6px; background: var(--bg-page); color: var(--text-body); min-width: 0; }
+.hour-row input[aria-invalid="true"] { border-color: #D62246; }
+.hour-row .error { grid-column: 1 / -1; margin: 0; }
+
+.inline-form { display: grid; grid-template-columns: 11rem 1fr auto auto; gap: .75rem 1rem; align-items: end; }
+.inline-form .field, .inline-form .check { margin: 0; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list__item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-top: 1px solid var(--border-color); }
+.list__item:first-child { border-top: 0; }
+.list__item form { margin: 0; }
+.tag { background: var(--accent); color: var(--on-accent); font-style: normal; font-weight: 700; font-size: .85rem; padding: .1rem .5rem; margin-left: .5rem; }
+details.card summary { cursor: pointer; font-weight: 700; }
+
+@media (max-width: 860px) {
+  .offices { grid-template-columns: 1fr; }
+  .inline-form { grid-template-columns: 1fr; }
+}
+
+/* Acciones segun su funcion */
+.btn--danger { color: var(--c-danger); border-color: var(--c-danger); }
+.btn--danger:hover { background: var(--c-danger); border-color: var(--c-danger); color: #fff; }
+.btn--add { color: var(--c-add); border-color: var(--c-add); }
+.btn--add:hover { background: var(--c-add); border-color: var(--c-add); color: #fff; }
+.check--warn { padding: .4rem .75rem; border: 2px solid var(--c-warn); border-radius: 6px; color: var(--c-warn); }
+.check--warn input { accent-color: var(--c-warn); }
+.tag { background: var(--c-warn); color: #fff; }
+.field input:focus, .hour-row input:focus, .row input:focus { border-color: var(--sec); }
+.hint { border-left: 4px solid var(--sec); padding-left: .75rem; }
+.error::before { content: "⚠ "; }
+.list__main strong { color: var(--sec); }
