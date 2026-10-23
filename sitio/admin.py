@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from .models import ConfiguracionSitio, Feriado, Horario, HorarioOficina, Oficina, Ruta
+from .models import Feriado, Horario, HorarioOficina, Oficina, Ruta
 
 
 class UsernamePasswordChangeForm(AdminPasswordChangeForm):
@@ -41,21 +41,6 @@ class RutaAdmin(admin.ModelAdmin):
     list_display = ("origen", "destino")
 
 
-@admin.register(ConfiguracionSitio)
-class ConfiguracionSitioAdmin(admin.ModelAdmin):
-    fields = ("google_maps_api_key",)
-
-    def has_add_permission(self, request):
-        return not ConfiguracionSitio.objects.exists()
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def changelist_view(self, request, extra_context=None):
-        obj = ConfiguracionSitio.load()
-        return redirect(reverse("admin:sitio_configuracionsitio_change", args=[obj.pk]))
-
-
 @admin.register(Horario)
 class HorarioAdmin(admin.ModelAdmin):
     list_display = ("ruta", "tipo_dia", "hora_salida", "es_horario_especial")
@@ -85,17 +70,26 @@ class HorarioOficinaInline(admin.TabularInline):
     fields = ("dia", "horario", "orden")
     ordering = ("orden",)
     extra = 1
+    verbose_name = "Horario de atención"
+    verbose_name_plural = "Horario de atención (días y horas en que atiende la oficina)"
 
 
 @admin.register(Oficina)
 class OficinaAdmin(admin.ModelAdmin):
-    list_display = ("ciudad", "tipo", "direccion", "telefono", "orden")
+    list_display = ("ciudad", "tipo", "direccion", "telefono", "horario_atencion", "orden")
     list_display_links = ("ciudad",)
     list_editable = ("orden",)
     list_filter = ("ciudad", "tipo")
     search_fields = ("ciudad", "direccion", "telefono")
     ordering = ("ciudad", "orden")
     inlines = [HorarioOficinaInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("horarios")
+
+    @admin.display(description="Horario de atención")
+    def horario_atencion(self, obj):
+        return " · ".join(f"{h.dia}: {h.horario}" for h in obj.horarios.all()) or "—"
 
 
 @admin.register(Feriado)
