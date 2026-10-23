@@ -177,9 +177,15 @@ if not DEBUG:
 # Webhook de GitHub para el despliegue automatico (ver DEPLOY.md). Con
 # WEBHOOK_SECRET vacio el endpoint /deploy/webhook/ responde 404 (inactivo).
 WEBHOOK_SECRET = config('WEBHOOK_SECRET', default='')
-DEPLOY_SCRIPT = config('DEPLOY_SCRIPT', default='/home/suraycl1/deploy_scripts/auto_deploy_test.py')
-DEPLOY_FLAG_FILE = config('DEPLOY_FLAG_FILE', default='/home/suraycl1/deploy_scripts/deploy.flag')
-DEPLOY_LAUNCH_LOG = config('DEPLOY_LAUNCH_LOG', default='/home/suraycl1/deploy_scripts/webhook_launch.log')
+# Rama que dispara el despliegue de ESTA app: main en test.suray.cl, produccion en suray.cl.
+# DEPLOY_NAME ("test" o "produccion") debe coincidir con el del script (deploy/auto_deploy_test.py).
+DEPLOY_BRANCH = config('DEPLOY_BRANCH', default='main')
+DEPLOY_NAME = config('DEPLOY_NAME', default='test')
+_DEPLOY_DIR = config('DEPLOY_DIR', default='/home/suraycl1/deploy_scripts')
+_PREFIJO = '' if DEPLOY_NAME == 'test' else f'{DEPLOY_NAME}_'
+DEPLOY_SCRIPT = config('DEPLOY_SCRIPT', default=f'{_DEPLOY_DIR}/auto_deploy_test.py')
+DEPLOY_FLAG_FILE = config('DEPLOY_FLAG_FILE', default=f'{_DEPLOY_DIR}/{_PREFIJO}deploy.flag')
+DEPLOY_LAUNCH_LOG = config('DEPLOY_LAUNCH_LOG', default=f'{_DEPLOY_DIR}/{_PREFIJO}webhook_launch.log')
 
 
 # Cache en archivos: el contador de intentos fallidos de /edit/ debe compartirse

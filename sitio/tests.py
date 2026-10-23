@@ -362,3 +362,65 @@ class EditAdministracionTests(TestCase):
         self.staff.refresh_from_db()
         self.assertEqual(self.staff.username, 'staff')
         self.assertTrue(self.staff.check_password('clave-segura-1'))
+
+
+class WebhookRamaTests(TestCase):
+    """En suray.cl el webhook solo reacciona a produccion, en test.suray.cl solo a main."""
+
+    def post_push(self, ref):
+        body = json.dumps({'ref': ref}).encode()
+        with mock.patch('subprocess.Popen') as popen:
+            r = self.client.post(URL, body, content_type='application/json',
+                                 HTTP_X_GITHUB_EVENT='push', HTTP_X_HUB_SIGNATURE_256=firmar(body))
+        return r, popen
+
+    @override_settings(WEBHOOK_SECRET=SECRET, DEPLOY_BRANCH='produccion',
+                       DEPLOY_LAUNCH_LOG=tempfile.gettempdir() + '/launch-test.log')
+    def test_produccion_solo_despliega_su_rama(self):
+        r, popen = self.post_push('refs/heads/produccion')
+        self.assertEqual(r.status_code, 202)
+        popen.assert_called_once()
+        r, popen = self.post_push('refs/heads/main')
+        self.assertEqual(r.status_code, 202)
+        popen.assert_not_called()
+
+    @override_settings(WEBHOOK_SECRET=SECRET, DEPLOY_BRANCH='main')
+    def test_test_ignora_produccion(self):
+        _, popen = self.post_push('refs/heads/produccion')
+        popen.assert_not_called()
+
+
+class ScriptDespliegueTests(TestCase):
+    """El script se configura por entorno: test conserva sus nombres, produccion usa los suyos."""
+
+    def cargar(self, **entorno):
+        import importlib.util
+        ruta = Path(__file__).resolve().parent.parent / 'deploy' / 'auto_deploy_test.py'
+        spec = importlib.util.spec_from_file_location('auto_deploy_probe', ruta)
+        modulo = importlib.util.module_from_spec(spec)
+        base = {k: v for k, v in __import__('os').environ.items() if not k.startswith('DEPLOY_')}
+        with mock.patch.dict('os.environ', {**base, **entorno}, clear=True):
+            spec.loader.exec_module(modulo)
+        return modulo
+
+    def test_valores_por_defecto_son_los_de_test(self):
+        m = self.cargar()
+        self.assertEqual(m.BRANCH, 'main')
+        self.assertTrue(m.DEPLOY_TARGET.endswith('/public_html/test.suray.cl'))
+        self.assertTrue(m.LOG_FILE.endswith('/test_deploy.log'))
+        self.assertTrue(m.LOCK_FILE.endswith('/deploy.lock'))
+        self.assertTrue(m.FLAG_FILE.endswith('/deploy.flag'))
+        self.assertTrue(m.ENV_FILE.endswith('/deploy.env'))
+
+    def test_produccion_usa_su_rama_destino_y_archivos(self):
+        m = self.cargar(DEPLOY_NAME='produccion', DEPLOY_BRANCH='produccion',
+                        DEPLOY_TARGET='/home/x/public_html/suray.cl', DEPLOY_DIR='/home/x/d')
+        self.assertEqual(m.BRANCH, 'produccion')
+        self.assertTrue(m.API_COMMIT_URL.endswith('/commits/produccion'))
+        self.assertTrue(m.TARBALL_URL.endswith('/tarball/produccion'))
+        self.assertEqual(m.DEPLOY_TARGET, '/home/x/public_html/suray.cl')
+        self.assertEqual(m.STATE_FILE, '/home/x/d/produccion_deploy_state.json')
+        self.assertEqual(m.LOG_FILE, '/home/x/d/produccion_deploy.log')
+        self.assertEqual(m.LOCK_FILE, '/home/x/d/produccion_deploy.lock')
+        self.assertEqual(m.FLAG_FILE, '/home/x/d/produccion_deploy.flag')
+        self.assertEqual(m.ENV_FILE, '/home/x/d/produccion_deploy.env')

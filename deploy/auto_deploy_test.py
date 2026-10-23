@@ -1,8 +1,8 @@
 """
-Auto-deploy script para test.suray.cl.
+Auto-deploy script para test.suray.cl y suray.cl (el mismo archivo sirve para ambos).
 
 Corre periodicamente via Cron Job en el servidor. Revisa el ultimo commit
-de la rama 'main' del repo publico en GitHub, y si cambio respecto al
+de la rama configurada (main para test, produccion para suray.cl) del repo publico en GitHub, y si cambio respecto al
 ultimo despliegue, descarga el tarball y sincroniza los archivos
 versionados sobre el document root de la app, sin tocar archivos que no
 estan en git (db.sqlite3, staticfiles/, .htaccess, tmp/, etc).
@@ -33,14 +33,29 @@ import tempfile
 import urllib.request
 from datetime import datetime, timezone
 
+# Cada sitio se configura por variables de entorno (en la app de cPanel, o delante del
+# comando en el cron). Sin definirlas se despliega test.suray.cl, como antes.
+#   DEPLOY_NAME   nombre del sitio: prefijo de log/estado/lock/flag/env ("test" o "produccion")
+#   DEPLOY_BRANCH rama de GitHub a desplegar
+#   DEPLOY_TARGET carpeta de la app
+#   DEPLOY_DIR    carpeta de scripts y estado
 REPO = "Roadixito23/suray-web"
-BRANCH = "main"
-DEPLOY_TARGET = "/home/suraycl1/public_html/test.suray.cl"
-STATE_FILE = "/home/suraycl1/deploy_scripts/test_deploy_state.json"
-LOG_FILE = "/home/suraycl1/deploy_scripts/test_deploy.log"
-LOCK_FILE = "/home/suraycl1/deploy_scripts/deploy.lock"
-FLAG_FILE = "/home/suraycl1/deploy_scripts/deploy.flag"
-ENV_FILE = "/home/suraycl1/deploy_scripts/deploy.env"
+NAME = os.environ.get("DEPLOY_NAME", "test")
+BRANCH = os.environ.get("DEPLOY_BRANCH", "main")
+DEPLOY_TARGET = os.environ.get("DEPLOY_TARGET", "/home/suraycl1/public_html/test.suray.cl")
+DEPLOY_DIR = os.environ.get("DEPLOY_DIR", "/home/suraycl1/deploy_scripts")
+
+
+def _archivo(nombre_test, nombre):
+    """test conserva los nombres historicos; los demas sitios llevan su prefijo."""
+    return os.path.join(DEPLOY_DIR, nombre_test if NAME == "test" else f"{NAME}_{nombre}")
+
+
+STATE_FILE = os.path.join(DEPLOY_DIR, f"{NAME}_deploy_state.json")
+LOG_FILE = os.path.join(DEPLOY_DIR, f"{NAME}_deploy.log")
+LOCK_FILE = _archivo("deploy.lock", "deploy.lock")
+FLAG_FILE = _archivo("deploy.flag", "deploy.flag")
+ENV_FILE = _archivo("deploy.env", "deploy.env")
 
 API_COMMIT_URL = f"https://api.github.com/repos/{REPO}/commits/{BRANCH}"
 TARBALL_URL = f"https://api.github.com/repos/{REPO}/tarball/{BRANCH}"

@@ -1,5 +1,5 @@
 """
-Webhook de GitHub que dispara el despliegue de test.suray.cl al instante.
+Webhook de GitHub que dispara el despliegue de la app (test o produccion) al instante.
 
 Inactivo (404) mientras WEBHOOK_SECRET este vacio. El despliegue real lo hace
 deploy/auto_deploy_test.py, lanzado en un proceso separado que hereda las
@@ -20,8 +20,6 @@ from django.views.decorators.csrf import csrf_exempt
 logger = logging.getLogger(__name__)
 
 MAX_BODY_BYTES = 1024 * 1024
-DEPLOY_REF = 'refs/heads/main'
-
 
 def _firma_valida(secret, body, header):
     if not header or not header.startswith('sha256='):
@@ -77,9 +75,9 @@ def webhook(request):
         ref = json.loads(body).get('ref')
     except (ValueError, AttributeError):
         return HttpResponse(status=400)
-    if ref != DEPLOY_REF:
+    if ref != f'refs/heads/{settings.DEPLOY_BRANCH}':
         return HttpResponse(status=202)
 
-    logger.info('Webhook push a main: lanzando despliegue')
+    logger.info('Webhook push a %s: lanzando despliegue', settings.DEPLOY_BRANCH)
     _lanzar_despliegue()
     return HttpResponse(status=202)

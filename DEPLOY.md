@@ -229,3 +229,70 @@ En cPanel → **Cron Jobs**:
 > Con `DEBUG=False` los estáticos solo se sirven tras `collectstatic` (Whitenoise con
 > manifiesto); si falta, las páginas dan error 500. El script ya lo ejecuta en cada despliegue.
 
+
+## 11. Producción (suray.cl) con la rama `produccion`
+
+Flujo: `main` → test.suray.cl (automático); cuando test está bien, se promueve a
+`produccion` → suray.cl (automático).
+
+```
+git switch produccion
+git merge --ff-only main
+git push
+git switch main
+```
+
+El mismo código y el mismo script sirven para los dos sitios; lo que cambia es la
+configuración por variables de entorno. Sin definirlas, todo se comporta como test.
+
+| Variable | test.suray.cl | suray.cl |
+|---|---|---|
+| `DEPLOY_NAME` | *(vacía, o `test`)* | `produccion` |
+| `DEPLOY_BRANCH` | *(vacía, o `main`)* | `produccion` |
+| `DEPLOY_TARGET` | *(vacía)* | `/home/suraycl1/public_html/suray.cl` |
+| `WEBHOOK_SECRET` | el de test | uno **distinto**, propio de producción |
+
+Defínelas en cPanel → Setup Python App → Environment variables **de la app de suray.cl**
+(no en un `.env`: el script lo lanza el webhook y solo hereda las variables de la app),
+junto con las de la sección 2 (`DEBUG=False`, `ALLOWED_HOSTS=suray.cl,www.suray.cl`,
+`SECRET_KEY` nuevo y `DB_*` de producción). **No compartas la base de datos con test.**
+
+### 11.1 Archivos que usa cada sitio (carpeta `/home/suraycl1/deploy_scripts/`)
+
+| | test | produccion |
+|---|---|---|
+| Script | `auto_deploy_test.py` | el mismo archivo |
+| Log | `test_deploy.log` | `produccion_deploy.log` |
+| Estado | `test_deploy_state.json` | `produccion_deploy_state.json` |
+| Bloqueo / marcador | `deploy.lock` / `deploy.flag` | `produccion_deploy.lock` / `produccion_deploy.flag` |
+| Variables del cron | `deploy.env` | `produccion_deploy.env` |
+| Log del webhook | `webhook_launch.log` | `produccion_webhook_launch.log` |
+
+`produccion_deploy.env` lleva las mismas líneas `KEY=VALUE` que `deploy.env` pero con los
+valores de producción (sección 10.4), con permisos `600`.
+
+### 11.2 Cron de producción
+
+El cron no tiene las variables de la app, así que se pasan delante del comando:
+
+```
+DEPLOY_NAME=produccion DEPLOY_BRANCH=produccion DEPLOY_TARGET=/home/suraycl1/public_html/suray.cl /home/suraycl1/virtualenv/public_html/suray.cl/3.12/bin/python /home/suraycl1/deploy_scripts/auto_deploy_test.py
+```
+
+Cada hora como respaldo; y, opcional, cada minuto solo si existe el marcador
+`produccion_deploy.flag` (misma forma que en la sección 10.4).
+
+### 11.3 Webhook en GitHub
+
+Settings → Webhooks → Add webhook: `https://suray.cl/deploy/webhook/`, `application/json`,
+el secreto de producción y solo el evento push. Cada app solo despliega su rama: un push a
+`main` responde 202 sin hacer nada en suray.cl, y uno a `produccion` hace lo mismo en test.
+
+### 11.4 Primer despliegue
+
+1. Haz el primer despliegue **a mano** (secciones 0 a 8) y verifica el sitio antes de
+   activar el webhook.
+2. Sube a mano el script actualizado a `deploy_scripts/` (recuerda que `deploy/` no se
+   sincroniza solo) **antes** del primer despliegue automático.
+3. Protege la rama `produccion` en GitHub (Settings → Branches): sin push directo ni
+   force-push.
