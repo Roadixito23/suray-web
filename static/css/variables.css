@@ -28,6 +28,7 @@
   --accent: #F47200;         /* naranja: franjas, marcas, botones */
   --accent-hover: #FF8A26;
   --on-accent: #001959;      /* texto sobre --accent */
+  --text-shadow: 0 2px 4px rgba(0, 25, 89, .25); /* sombreado suave de titulos */
 }
 
 [data-theme="dark"] {
@@ -49,6 +50,7 @@
   --accent: #FF8A26;
   --accent-hover: #FFA757;
   --on-accent: #001959;
+  --text-shadow: 0 2px 4px rgba(0, 0, 0, .55);
 }
 
 @font-face {

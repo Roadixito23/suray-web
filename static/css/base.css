@@ -32,6 +32,7 @@ h1, h2, h3, h4 {
   color: var(--text-heading);
   line-height: 1.2;
   font-weight: 700;
+  text-shadow: var(--text-shadow);
   margin: 0;
 }
 p { margin: 0 0 1rem; max-width: 60ch; }
@@ -115,6 +116,7 @@ p { margin: 0 0 1rem; max-width: 60ch; }
   border-color: var(--accent);
   color: var(--on-accent);
   font-family: 'Hemiheads', 'Atkinson Hyperlegible', sans-serif;
+  text-shadow: var(--text-shadow);
   font-weight: normal;
   font-size: 1.15rem;
   letter-spacing: .02em;
