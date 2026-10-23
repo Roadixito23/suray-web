@@ -14,6 +14,17 @@
   padding: 1.25rem 1.25rem 1.5rem;
 }
 .departure h3 { color: #fff; font-size: 1.2rem; margin-bottom: .5rem; }
+.departure__weather {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem .6rem;
+  margin: 0 0 1rem;
+  max-width: none;
+  font-size: 1.1rem;
+}
+.departure__weather-icon { font-size: 1.6rem; line-height: 1; }
+.departure__weather-temp { font-weight: 700; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
 .departure__next {
   display: flex;
   align-items: baseline;

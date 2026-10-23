@@ -213,3 +213,44 @@ class EditPanelTests(TestCase):
         self.assertEqual(self.client.get('/edit/logout/').status_code, 405)
         r = self.client.post('/edit/logout/')
         self.assertRedirects(r, '/edit/login/', fetch_redirect_response=False)
+
+
+class ClimaTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.delete('clima_actual')
+        self.addCleanup(cache.delete, 'clima_actual')
+
+    @staticmethod
+    def _respuesta():
+        datos = [
+            {'current': {'temperature_2m': 9.6, 'weather_code': 63, 'is_day': 1}},
+            {'current': {'temperature_2m': 7.2, 'weather_code': 0, 'is_day': 0}},
+        ]
+        resp = mock.MagicMock()
+        resp.__enter__.return_value = resp
+        resp.read.return_value = json.dumps(datos).encode()
+        return resp
+
+    def test_parsea_y_cachea(self):
+        from sitio import clima
+        with mock.patch('sitio.clima.urlopen', return_value=self._respuesta()) as m:
+            datos = clima.clima_actual()
+            clima.clima_actual()
+        self.assertEqual(m.call_count, 1)
+        self.assertEqual(datos['Puerto Aysén']['temperatura'], 10)
+        self.assertEqual(datos['Puerto Aysén']['descripcion'], 'Lluvia')
+        self.assertEqual(datos['Coyhaique']['icono'], '🌙')
+
+    def test_falla_de_api_devuelve_vacio(self):
+        from sitio import clima
+        with mock.patch('sitio.clima.urlopen', side_effect=OSError('sin red')):
+            self.assertEqual(clima.clima_actual(), {})
+
+    @override_settings(STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    })
+    def test_inicio_no_se_rompe_sin_clima(self):
+        with mock.patch('sitio.clima.urlopen', side_effect=OSError('sin red')):
+            self.assertEqual(self.client.get('/').status_code, 200)

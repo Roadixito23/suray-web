@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.shortcuts import render
 from django.utils import timezone
 
+from .clima import clima_actual
 from .models import ConfiguracionSitio, Feriado, Horario, Oficina, Ruta
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
@@ -32,6 +33,7 @@ def inicio(request):
     tipo_hoy = _tipo_dia_para(hoy, feriado_hoy is not None)
     tipo_manana = _tipo_dia_para(manana, feriado_manana is not None)
 
+    clima = clima_actual()
     salidas = []
     for origen in Ruta.objects.order_by("id").values_list("origen", flat=True).distinct():
         # Hasta 3 salidas: primero las que quedan hoy, luego las de manana.
@@ -62,6 +64,7 @@ def inicio(request):
             salidas.append({"origen": origen, "aviso": "Sin recorrido hoy por feriado."})
         else:
             salidas.append({"origen": origen, "aviso": "Sin salidas próximas."})
+        salidas[-1]["clima"] = clima.get(origen)
 
     if feriado_hoy:
         hoy_label = f"Hoy es feriado: {feriado_hoy.nombre}"
