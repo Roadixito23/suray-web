@@ -249,13 +249,25 @@ configuración por variables de entorno. Sin definirlas, todo se comporta como t
 |---|---|---|
 | `DEPLOY_NAME` | *(vacía, o `test`)* | `produccion` |
 | `DEPLOY_BRANCH` | *(vacía, o `main`)* | `produccion` |
-| `DEPLOY_TARGET` | *(vacía)* | `/home/suraycl1/public_html/suray.cl` |
+| `DEPLOY_TARGET` | *(vacía)* | `/home/suraycl1/suray_prod` |
 | `WEBHOOK_SECRET` | el de test | uno **distinto**, propio de producción |
+
+`suray.cl` es el dominio principal de la cuenta y su raíz (`public_html/`) no se puede
+cambiar; dentro de ella viven las carpetas de los subdominios (`test.suray.cl/`,
+`mantenimiento/`…). Por eso el código de producción va **fuera** de `public_html`
+(`/home/suraycl1/suray_prod`, Application root de la Python App con URL `suray.cl`): cPanel
+solo escribe ahí el bloque de Passenger del `.htaccess` de `public_html/`.
 
 Defínelas en cPanel → Setup Python App → Environment variables **de la app de suray.cl**
 (no en un `.env`: el script lo lanza el webhook y solo hereda las variables de la app),
 junto con las de la sección 2 (`DEBUG=False`, `ALLOWED_HOSTS=suray.cl,www.suray.cl`,
 `SECRET_KEY` nuevo y `DB_*` de producción). **No compartas la base de datos con test.**
+`DB_PASSWORD` es la contraseña del **usuario de MySQL** (cPanel → MySQL Databases), no la de
+cPanel ni la de FTP.
+
+En el dominio principal, `SECURE_HSTS_INCLUDE_SUBDOMAINS=False` y un
+`SECURE_HSTS_SECONDS` bajo al principio (p. ej. `3600`): con el valor por defecto (un año con
+subdominios) el navegador forzaría HTTPS en test y en el resto de subdominios.
 
 ### 11.1 Archivos que usa cada sitio (carpeta `/home/suraycl1/deploy_scripts/`)
 
@@ -276,11 +288,13 @@ valores de producción (sección 10.4), con permisos `600`.
 El cron no tiene las variables de la app, así que se pasan delante del comando:
 
 ```
-DEPLOY_NAME=produccion DEPLOY_BRANCH=produccion DEPLOY_TARGET=/home/suraycl1/public_html/suray.cl /home/suraycl1/virtualenv/public_html/suray.cl/3.12/bin/python /home/suraycl1/deploy_scripts/auto_deploy_test.py
+DEPLOY_NAME=produccion DEPLOY_BRANCH=produccion DEPLOY_TARGET=/home/suraycl1/suray_prod /home/suraycl1/virtualenv/suray_prod/3.13/bin/python /home/suraycl1/deploy_scripts/auto_deploy_test.py >> /home/suraycl1/deploy_scripts/produccion_cron_stdout.log 2>&1
 ```
 
-Cada hora como respaldo; y, opcional, cada minuto solo si existe el marcador
-`produccion_deploy.flag` (misma forma que en la sección 10.4).
+El Python es el del virtualenv que genera cPanel para la app (la versión, `3.13` aquí,
+depende de la que elijas en Setup Python App). Cada hora como respaldo; y, opcional, cada
+minuto solo si existe el marcador `produccion_deploy.flag` (misma forma que en la sección
+10.4).
 
 ### 11.3 Webhook en GitHub
 
@@ -288,11 +302,40 @@ Settings → Webhooks → Add webhook: `https://suray.cl/deploy/webhook/`, `appl
 el secreto de producción y solo el evento push. Cada app solo despliega su rama: un push a
 `main` responde 202 sin hacer nada en suray.cl, y uno a `produccion` hace lo mismo en test.
 
-### 11.4 Primer despliegue
+### 11.4 Primer despliegue (hosting sin SSH ni Terminal)
 
-1. Haz el primer despliegue **a mano** (secciones 0 a 8) y verifica el sitio antes de
-   activar el webhook.
+Con solo File Manager, FTP y Cron Jobs, el propio script hace el primer despliegue:
+
+1. cPanel → MySQL Databases: crea una base y un usuario **solo para producción**.
 2. Sube a mano el script actualizado a `deploy_scripts/` (recuerda que `deploy/` no se
-   sincroniza solo) **antes** del primer despliegue automático.
-3. Protege la rama `produccion` en GitHub (Settings → Branches): sin push directo ni
-   force-push.
+   sincroniza solo) **antes** del primer despliegue automático; guarda copia del anterior.
+3. Setup Python App: root `suray_prod`, URL `suray.cl`, `passenger_wsgi.py`, `application`,
+   con las variables de la sección 11 (los valores secretos, pegados desde el portapapeles).
+4. Crea `deploy_scripts/produccion_deploy.env` (permisos `600`) con `SECRET_KEY`, `DEBUG=False`,
+   `ALLOWED_HOSTS`, `DB_*` y las de HSTS. **Debe llevar `DEBUG=False` y `DB_*`:** si el motor
+   efectivo no es MySQL, el script omite `migrate` y lo deja en el log.
+5. Cron de una sola vez (cada minuto) con el comando de 11.2; revisa
+   `produccion_deploy.log` hasta ver «Despliegue completo» y **borra ese cron**.
+6. Superusuario: cron de una sola vez con `DJANGO_SUPERUSER_USERNAME/EMAIL/PASSWORD` y
+   `manage.py createsuperuser --noinput` tras cargar `produccion_deploy.env` (importando
+   `load_env_file` de `auto_deploy_test`). La clave solo vive en ese cron: bórralo al terminar.
+7. Cambio de sitio: mientras haya un `index.html` (u otros archivos) en la raíz de
+   `public_html/`, Apache los sirve antes que Django. Mueve (no borres) esos archivos a un
+   respaldo fuera de `public_html` y deja `.htaccess`, `.well-known/`, `cgi-bin/` y las
+   carpetas de los subdominios. Para revertir, devuelve los archivos.
+8. Webhook en GitHub (11.3), cron de respaldo cada hora (11.2) y protege la rama
+   `produccion` (Settings → Branches): sin push directo ni force-push.
+
+### 11.5 Cosas que conviene saber
+
+- **Herencia del `.htaccess`:** el `.htaccess` de `public_html/` aplica también a las
+  subcarpetas, así que las variables de la app de producción llegan a la app de test si esta
+  no las redefine. La app de test debe definir `DEPLOY_NAME=test`, `DEPLOY_BRANCH=main` y
+  `DEPLOY_TARGET=/home/suraycl1/public_html/test.suray.cl`; si no, su webhook ignoraría los
+  push a `main`.
+- **Static con manifiesto:** `CompressedManifestStaticFilesStorage` exige que todo archivo
+  referenciado por un `.js`/`.css` exista (p. ej. un `sourceMappingURL` sin su `.map` hace
+  fallar `collectstatic`, y con él todo el despliegue). Al vendorizar librerías, quita la
+  referencia o incluye el `.map`.
+- **Contraseñas:** cambiar la contraseña de un usuario de MySQL rompe cualquier app que la
+  tenga en sus variables (y el `deploy.env` del cron). Actualízala en ambos sitios.
