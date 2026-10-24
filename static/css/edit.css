@@ -187,3 +187,58 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .hint { border-left: 4px solid var(--sec); padding-left: .75rem; }
 .error::before { content: "⚠ "; }
 .list__main strong { color: var(--sec); }
+
+/* Telefono en vertical: una columna, objetivos tactiles amplios y botones de ancho completo. */
+@media (max-width: 600px) {
+  html { font-size: 106.25%; }
+  h1 { font-size: 1.55rem; }
+  h2 { font-size: 1.1rem; }
+
+  .bar__inner { padding: .5rem 1rem; min-height: 0; gap: .5rem; }
+  .bar__title { font-size: 1rem; }
+  .bar__nav { width: 100%; justify-content: space-between; gap: .5rem; }
+  .bar__user { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: center; }
+
+  /* Secciones: cuadricula 2x2 en lugar de una fila que se parte de forma irregular */
+  .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; }
+  .sections a { padding: .75rem .5rem; text-align: center; border-bottom-width: 4px; }
+
+  .wrap { padding: 1rem 1rem 2rem; }
+
+  /* Pestanas de tipo de dia: reparten el ancho, una al lado de otra */
+  .tabs { flex-wrap: nowrap; gap: .35rem; }
+  .tabs a { flex: 1 1 0; min-width: 0; justify-content: center; text-align: center; padding: .25rem .4rem; font-size: .9rem; line-height: 1.2; }
+
+  .city, .card, .office { padding: 1rem; }
+  .row { grid-template-columns: 1fr auto; }
+  .row .btn--small, .hour-row .btn--small { min-width: 5.5rem; }
+
+  /* Filas de horario de oficina: dia arriba, horario y "Quitar" debajo */
+  .hour-row { grid-template-columns: 1fr auto; }
+  .hour-row input[name$="-dia"] { grid-column: 1 / -1; }
+
+  .check { align-items: flex-start; }
+  .check input { flex: none; margin-top: .1rem; }
+
+  /* Guardar siempre a la vista, a todo el ancho, sin tapar el borde inferior del telefono */
+  .actions { margin: 0 -1rem; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-color); }
+  .actions .btn, .card .btn--brand, .inline-form .btn { width: 100%; }
+  .office .actions { position: static; margin: 0 -1rem -1rem; background: transparent; }
+
+  /* Listas (feriados): texto arriba y accion a todo el ancho debajo */
+  .list__item { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .list__main { overflow-wrap: anywhere; }
+  .list__item form .btn { width: 100%; }
+  .tag { display: inline-block; margin: .25rem 0 0; }
+
+  .messages__item { overflow-wrap: anywhere; }
+  .card--narrow { max-width: none; }
+  .login { margin: 1rem 0; padding: 1.25rem 1rem; }
+}
+
+/* Telefonos muy angostos (<= 360 px) */
+@media (max-width: 360px) {
+  .sections a { font-size: .9rem; padding-inline: .25rem; }
+  .tabs a { font-size: .8rem; }
+  .row input[type="text"] { font-size: 1.15rem; }
+}
