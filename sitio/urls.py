@@ -17,5 +17,7 @@ urlpatterns = [
     path("edit/oficinas/", views_edit.edit_oficinas, name="edit_oficinas"),
     path("edit/oficinas/<int:pk>/", views_edit.edit_oficinas, name="edit_oficina"),
     path("edit/feriados/", views_edit.edit_feriados, name="edit_feriados"),
+    path("edit/avisos/", views_edit.edit_avisos, name="edit_avisos"),
+    path("edit/avisos/<int:pk>/", views_edit.edit_avisos, name="edit_aviso"),
     path("edit/cuenta/", views_edit.edit_cuenta, name="edit_cuenta"),
 ]

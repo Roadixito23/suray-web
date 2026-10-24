@@ -17,8 +17,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
 from . import vivo
-from .forms import CuentaForm, EditAuthenticationForm, FeriadoForm, HorarioOficinaFormSet, OficinaForm
-from .models import Feriado, Horario, Oficina, Ruta
+from .forms import CuentaForm, EditAuthenticationForm, AvisoForm, FeriadoForm, HorarioOficinaFormSet, OficinaForm
+from .models import Aviso, Feriado, Horario, Oficina, Ruta
 
 MAX_INTENTOS = 5
 BLOQUEO_SEGUNDOS = 15 * 60
@@ -246,6 +246,36 @@ def edit_feriados(request):
         "form": form,
         "proximos": Feriado.objects.filter(fecha__gte=hoy).order_by("fecha"),
         "pasados": Feriado.objects.filter(fecha__lt=hoy).order_by("-fecha"),
+    })
+
+
+@no_indexable
+@solo_staff
+@require_http_methods(["GET", "POST"])
+def edit_avisos(request, pk=None):
+    aviso = get_object_or_404(Aviso, pk=pk) if pk else None
+    form = AvisoForm(instance=aviso)
+    if request.method == "POST":
+        if request.POST.get("accion") == "eliminar":
+            borrado = get_object_or_404(Aviso, pk=request.POST.get("aviso"))
+            borrado.delete()
+            vivo.invalidar()
+            messages.success(request, _aviso_publicado(f"Aviso eliminado: {borrado.titulo}."))
+            return redirect("sitio:edit_avisos")
+        form = AvisoForm(request.POST, instance=aviso)
+        if form.is_valid():
+            form.save()
+            vivo.invalidar()
+            messages.success(request, _aviso_publicado("Aviso guardado."))
+            return redirect("sitio:edit_avisos")
+        messages.error(request, "Revisa los campos marcados. No se guardó nada.")
+    hoy = timezone.localdate()
+    vigentes, otros = [], []
+    for a in Aviso.objects.all():
+        en_fecha = (not a.desde or a.desde <= hoy) and (not a.hasta or a.hasta >= hoy)
+        (vigentes if a.activo and en_fecha else otros).append(a)
+    return render(request, "edit/avisos.html", {
+        "form": form, "editando": aviso, "vigentes": vigentes, "otros": otros,
     })
 
 

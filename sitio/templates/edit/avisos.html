@@ -1,0 +1,59 @@
+{% extends "edit/base.html" %}
+{% load static %}
+
+{% block title %}Avisos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/avisos.css' %}?v={{ site_version }}">
+{% endblock %}
+
+{% block content %}
+<aside class="preview-bar" aria-label="Vista previa del aviso">
+  <div class="preview-bar__head">
+    <strong>Vista previa</strong>
+    <span>Así se verá en Inicio; se actualiza mientras escribes.</span>
+  </div>
+  <div id="aviso-preview" class="notices"></div>
+</aside>
+
+<h1>Avisos</h1>
+<p class="hint">Aparecen arriba en Inicio mientras estén publicados y dentro de las fechas. Úsalos para suspensiones de recorridos u ofertas.</p>
+
+<section class="card">
+  <h2>{% if editando %}Editar aviso{% else %}Nuevo aviso{% endif %}</h2>
+  <form method="post" class="aviso-form" id="aviso-form">
+    {% csrf_token %}
+    {% for campo in form %}
+    {% if campo.name == 'activo' or campo.name == 'colores_propios' %}
+    <label class="check field--wide">{{ campo }}<span>{{ campo.label }}</span></label>
+    {% else %}
+    <label class="field{% if campo.name == 'titulo' or campo.name == 'mensaje' or campo.name == 'imagen_url' %} field--wide{% elif campo.name == 'estilo_color' or campo.name == 'color_principal' or campo.name == 'color_secundario' %} field--third{% endif %}">
+      <span>{{ campo.label }}</span>
+      {{ campo }}
+      {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </label>
+    {% endif %}
+    {% endfor %}
+    <div class="field--wide aviso-form__actions">
+    <button class="btn btn--brand" type="submit">{% if editando %}Guardar cambios{% else %}+ Publicar aviso{% endif %}</button>
+    {% if editando %}<a class="btn" href="{% url 'sitio:edit_avisos' %}">Cancelar</a>{% endif %}
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Vigentes</h2>
+  {% include "edit/_avisos_lista.html" with avisos=vigentes vacio="No hay avisos publicados ahora." %}
+</section>
+
+{% if otros %}
+<details class="card">
+  <summary>Inactivos o fuera de fecha ({{ otros|length }})</summary>
+  {% include "edit/_avisos_lista.html" with avisos=otros vacio="" %}
+</details>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/avisos-preview.js' %}?v={{ site_version }}"></script>
+{% endblock %}

@@ -6,7 +6,7 @@
   'use strict';
 
   var MAX_ESPERA = 120000;
-  var BLOQUES = '.departure, .day-card';
+  var BLOQUES = '.departure, .day-card, .notice';
 
   // Espera hasta el proximo sondeo: intervalo con jitter de +-10 %, y tras errores seguidos
   // se duplica por cada fallo hasta 2 minutos. `azar` es un numero en [0, 1).
@@ -14,6 +14,16 @@
     var base = intervalo * Math.pow(2, Math.min(fallos, 10));
     var jitter = 1 + (azar * 0.2 - 0.1);
     return Math.min(Math.round(base * jitter), MAX_ESPERA);
+  }
+
+  // Recarga la pagina una sola vez por version (evita bucles si algo sirve HTML en cache).
+  function recargarUnaVez(ventana, version) {
+    try {
+      if (ventana.sessionStorage.getItem('live-recarga') === version) { return false; }
+      ventana.sessionStorage.setItem('live-recarga', version);
+    } catch (e) { return false; }
+    ventana.location.reload();
+    return true;
   }
 
   // Indices de los bloques cuyo HTML cambio, o que son nuevos.
@@ -100,6 +110,10 @@
       enCurso = true;
       ventana.fetch(url, { cache: 'no-store', headers: { 'If-None-Match': etag || '' }, credentials: 'same-origin' })
         .then(function (r) {
+          // Tras un deploy, una pestana abierta con la version vieja se recarga una vez para no
+          // mezclar HTML nuevo con CSS/JS viejos.
+          var version = r.headers.get('X-Site-Version'), propia = caja.getAttribute('data-live-version');
+          if (version && propia && version !== propia && recargarUnaVez(ventana, version)) { return null; }
           if (r.status === 304) { return null; }
           if (!r.ok) { throw new Error('HTTP ' + r.status); }
           return r.text().then(function (html) { return { html: html, etag: r.headers.get('ETag') }; });

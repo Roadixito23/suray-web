@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from .models import Feriado, Horario, HorarioOficina, Oficina, Ruta
+from .models import Aviso, Feriado, Horario, HorarioOficina, Oficina, Ruta
 
 
 class UsernamePasswordChangeForm(AdminPasswordChangeForm):
@@ -97,3 +97,8 @@ class FeriadoAdmin(admin.ModelAdmin):
     list_display = ("fecha", "nombre", "sin_servicio")
     list_filter = ("sin_servicio",)
     ordering = ("fecha",)
+
+
+@admin.register(Aviso)
+class AvisoAdmin(admin.ModelAdmin):
+    list_display = ("titulo", "tipo", "formato", "posicion", "activo", "desde", "hasta")

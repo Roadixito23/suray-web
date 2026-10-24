@@ -1,0 +1,21 @@
+<article class="notice notice--{{ aviso.tipo }} notice--{{ aviso.estilo_color }} notice--{{ aviso.formato }}"{% if aviso.estilo_css %} style="{{ aviso.estilo_css }}"{% endif %}{% if aviso.tipo == "suspension" and aviso.formato != "carrusel" %} role="alert"{% endif %}>
+  {% if aviso.imagen_url %}<div class="notice__img"><img src="{{ aviso.imagen_url }}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>{% endif %}
+  {% if aviso.formato == "carrusel" %}
+  <div class="notice__body notice__body--ticker">
+    <h2 class="notice__title">{{ aviso.titulo }}</h2>
+    {% if aviso.mensaje %}
+    <div class="ticker ticker--{{ aviso.direccion }}" data-ticker>
+      <div class="ticker__track" style="animation-duration: {{ aviso.ticker_segundos }}s">
+        <span class="ticker__item">{{ aviso.mensaje_linea }}</span>
+        <span class="ticker__item" aria-hidden="true">{{ aviso.mensaje_linea }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="notice__body">
+    <h2 class="notice__title">{{ aviso.titulo }}</h2>
+    {% if aviso.mensaje %}<p class="notice__text">{{ aviso.mensaje|linebreaksbr }}</p>{% endif %}
+  </div>
+  {% endif %}
+</article>

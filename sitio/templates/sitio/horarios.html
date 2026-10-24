@@ -14,7 +14,7 @@
     <button class="btn" id="downloadBtn" type="button">Descargar como imagen</button>
   </div>
 
-  <div id="schedulesCapture" data-live-url="{% url 'sitio:vivo' 'horarios' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000">
+  <div id="schedulesCapture" data-live-url="{% url 'sitio:vivo' 'horarios' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000" data-live-version="{{ site_version }}">
 {{ vivo_html|safe }}
   </div>
   <p class="live-status" data-live-status hidden></p>

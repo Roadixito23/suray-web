@@ -3,22 +3,20 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/inicio.css' %}?v={{ site_version }}">
+<link rel="stylesheet" href="{% static 'css/avisos.css' %}?v={{ site_version }}">
 {% endblock %}
 
 {% block content %}
 <main class="container">
-  <div data-live-url="{% url 'sitio:vivo' 'inicio' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000">
+  <div data-live-url="{% url 'sitio:vivo' 'inicio' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000" data-live-version="{{ site_version }}">
 {{ vivo_html|safe }}
   </div>
   <p class="live-status" data-live-status hidden></p>
   <p class="visually-hidden" role="status" aria-live="polite" data-live-announce></p>
-
-  <nav class="quick-links" aria-label="Más información">
-    <a class="btn btn--brand" href="{% url 'sitio:horarios' %}">Todos los horarios</a>
-  </nav>
 </main>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/tiempo-real.js' %}?v={{ site_version }}"></script>
+<script src="{% static 'js/avisos.js' %}?v={{ site_version }}"></script>
 {% endblock %}

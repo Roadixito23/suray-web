@@ -298,7 +298,7 @@ class EditAdministracionTests(TestCase):
         self.client.force_login(self.staff)
 
     def test_secciones_exigen_login(self):
-        for url in ('/edit/oficinas/', '/edit/feriados/', '/edit/cuenta/'):
+        for url in ('/edit/oficinas/', '/edit/feriados/', '/edit/avisos/', '/edit/cuenta/'):
             self.assertEqual(self.client.get(url).status_code, 302, url)
         self.assertEqual(self.client.post(f'/edit/oficinas/{self.oficina.pk}/', {}).status_code, 302)
 
@@ -452,6 +452,8 @@ class VivoTests(TestCase):
         cache.clear()
         self.addCleanup(cache.clear)
         self.Horario, self.Feriado, self.time = Horario, Feriado, time
+        from .models import Aviso
+        self.Aviso = Aviso
         self.ruta = Ruta.objects.create(origen='Coyhaique', destino='Puerto Aysén')
         self.staff = User.objects.create_user('staff', password='clave-segura-1', is_staff=True)
         patcher = mock.patch('sitio.views.clima_actual', return_value={})
@@ -530,6 +532,162 @@ class VivoTests(TestCase):
             despues = self.client.get('/vivo/inicio/')
         self.assertNotEqual(antes['ETag'], despues['ETag'])
         self.assertContains(despues, 'Hoy es feriado: Dia de prueba')
+
+    def datos_aviso(self, **extra):
+        datos = {
+            'tipo': 'info', 'titulo': 'Aviso', 'posicion': 'arriba', 'formato': 'simple',
+            'direccion': 'izq_der', 'velocidad': 'normal',
+            'estilo_color': 'borde', 'color_principal': '#F47200', 'color_secundario': '#001959', 'activo': 'on',
+        }
+        datos.update(extra)
+        return datos
+
+    def test_aviso_aparece_en_la_zona_elegida(self):
+        self.crear(23, 0)
+        for posicion in ('arriba', 'medio', 'boton'):
+            self.Aviso.objects.create(titulo=f'En {posicion}', posicion=posicion)
+        html = self.client.get('/vivo/inicio/').content.decode()
+        pos = {p: html.index(f'En {p}') for p in ('arriba', 'medio', 'boton')}
+        self.assertLess(pos['arriba'], html.index('Próximas salidas'))
+        self.assertLess(html.index('Próximas salidas'), pos['medio'])
+        self.assertLess(pos['medio'], html.index('Todos los horarios'))
+        self.assertGreater(pos['boton'], html.index('Todos los horarios'))
+
+    def test_boton_todos_los_horarios_sigue_en_la_portada(self):
+        self.assertContains(self.client.get('/'), 'Todos los horarios')
+
+    def test_carrusel_es_un_noticiero_con_texto_corrido(self):
+        self.Aviso.objects.create(titulo='Noticia', mensaje='Linea uno\nLinea dos', formato='carrusel')
+        html = self.client.get('/vivo/inicio/').content.decode()
+        self.assertIn('data-ticker', html)
+        self.assertIn('Linea uno · Linea dos', html)
+        self.assertEqual(html.count('Linea uno · Linea dos'), 2)  # copia para el bucle continuo
+        self.assertEqual(html.count('aria-hidden="true">Linea'), 1)
+
+    def test_fechas_en_formato_chile_se_guardan_y_se_muestran_asi(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(titulo='Chile', desde='25-12-2026', hasta='31/12/2026'))
+        aviso = self.Aviso.objects.get(titulo='Chile')
+        self.assertEqual((str(aviso.desde), str(aviso.hasta)), ('2026-12-25', '2026-12-31'))
+        self.assertContains(self.client.get(f'/edit/avisos/{aviso.pk}/'), 'value="25-12-2026"')
+        r = self.client.post('/edit/feriados/', {'fecha': '01-05-2099', 'nombre': 'Trabajo'})
+        self.assertEqual(str(self.Feriado.objects.get(nombre='Trabajo').fecha), '2099-05-01')
+
+    def test_fecha_invalida_pide_formato_chile(self):
+        self.client.force_login(self.staff)
+        r = self.client.post('/edit/avisos/', self.datos_aviso(desde='31-02-2026'))
+        self.assertContains(r, 'DD-MM-AAAA')
+        self.assertFalse(self.Aviso.objects.exists())
+
+    def test_direccion_y_velocidad_del_noticiero(self):
+        self.Aviso.objects.create(titulo='A', mensaje='x' * 100, formato='carrusel', direccion='der_izq', velocidad='lenta')
+        self.Aviso.objects.create(titulo='B', mensaje='x' * 100, formato='carrusel', velocidad='rapida')
+        html = self.client.get('/vivo/inicio/').content.decode()
+        self.assertEqual(html.count('ticker--der_izq'), 1)
+        self.assertEqual(html.count('ticker--izq_der'), 1)
+        self.assertIn('animation-duration: 30s', html)  # 1200 px / 40 px/s
+        self.assertIn('animation-duration: 9s', html)   # 1200 px / 140 px/s
+
+    def test_direccion_y_velocidad_se_guardan_desde_el_panel(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(
+            titulo='Cinta', formato='carrusel', direccion='der_izq', velocidad='rapida'))
+        a = self.Aviso.objects.get(titulo='Cinta')
+        self.assertEqual((a.direccion, a.velocidad), ('der_izq', 'rapida'))
+
+    def test_carrusel_sin_mensaje_solo_muestra_el_titulo(self):
+        self.Aviso.objects.create(titulo='Solo titulo', formato='carrusel')
+        html = self.client.get('/vivo/inicio/').content.decode()
+        self.assertIn('Solo titulo', html)
+        self.assertNotIn('data-ticker', html)
+
+    def test_colores_propios_llegan_como_variables_css_con_contraste(self):
+        self.Aviso.objects.create(
+            titulo='Claro', estilo_color='solido', color_principal='#FFEE00', color_secundario='#001959')
+        self.Aviso.objects.create(titulo='Oscuro', estilo_color='solido', color_principal='#001959')
+        html = self.client.get('/vivo/inicio/').content.decode()
+        self.assertIn('--n-main:#FFEE00;--n-alt:#001959;--n-ink:#000000', html)
+        self.assertIn('--n-main:#001959;--n-alt:#001959;--n-ink:#FFFFFF', html)
+
+    def test_sin_colores_propios_no_hay_estilo_en_linea(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(titulo='Por defecto'))  # sin colores_propios
+        aviso = self.Aviso.objects.get(titulo='Por defecto')
+        self.assertEqual((aviso.color_principal, aviso.color_secundario, aviso.estilo_css), ('', '', ''))
+
+    def test_sin_colores_propios_el_estilo_vuelve_a_borde(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(titulo='Sin propios', estilo_color='solido'))
+        self.assertEqual(self.Aviso.objects.get(titulo='Sin propios').estilo_color, 'borde')
+
+    def test_texto_elige_el_mayor_contraste(self):
+        verde = self.Aviso(color_principal='#05B287', estilo_color='solido')
+        azul = self.Aviso(color_principal='#001959', estilo_color='solido')
+        self.assertEqual((verde.color_texto, azul.color_texto), ('#000000', '#FFFFFF'))
+
+    def test_fragmento_informa_la_version_y_la_pagina_la_declara(self):
+        from django.conf import settings
+        self.assertEqual(self.client.get('/vivo/inicio/')['X-Site-Version'], settings.SITE_VERSION)
+        self.assertContains(self.client.get('/'), f'data-live-version="{settings.SITE_VERSION}"')
+        self.assertContains(self.client.get('/horarios/'), f'data-live-version="{settings.SITE_VERSION}"')
+
+    def test_colores_propios_se_guardan_desde_el_panel(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(titulo='Mio', colores_propios='on', color_principal='#112233'))
+        self.assertEqual(self.Aviso.objects.get(titulo='Mio').color_principal, '#112233')
+
+    def test_color_invalido_no_se_guarda(self):
+        self.client.force_login(self.staff)
+        r = self.client.post('/edit/avisos/', self.datos_aviso(colores_propios='on', color_principal='red;x'))
+        self.assertFalse(self.Aviso.objects.exists())
+        self.assertContains(r, 'Revisa los campos marcados')
+
+    def test_imagen_solo_https(self):
+        self.client.force_login(self.staff)
+        self.client.post('/edit/avisos/', self.datos_aviso(imagen_url='http://ejemplo.cl/a.jpg'))
+        self.assertFalse(self.Aviso.objects.exists())
+        self.client.post('/edit/avisos/', self.datos_aviso(imagen_url='javascript:alert(1)'))
+        self.assertFalse(self.Aviso.objects.exists())
+        self.client.post('/edit/avisos/', self.datos_aviso(imagen_url='https://ejemplo.cl/a.jpg', formato='cartel'))
+        self.assertContains(self.client.get('/vivo/inicio/'), 'src="https://ejemplo.cl/a.jpg"')
+
+    def test_cambiar_la_posicion_desde_el_panel_cambia_inicio(self):
+        aviso = self.Aviso.objects.create(titulo='Se mueve')
+        self.client.force_login(self.staff)
+        antes = self.client.get('/vivo/inicio/')
+        self.client.post(f'/edit/avisos/{aviso.pk}/', self.datos_aviso(titulo='Se mueve', posicion='boton'))
+        self.assertNotEqual(antes['ETag'], self.client.get('/vivo/inicio/')['ETag'])
+
+    def test_aviso_del_panel_aparece_en_inicio_y_respeta_fechas(self):
+        self.crear(23, 0)
+        self.client.force_login(self.staff)
+        hoy = self.hora_local(2026, 10, 21, 10, 0)
+        with mock.patch('django.utils.timezone.now', return_value=hoy):
+            antes = self.client.get('/vivo/inicio/')
+            self.assertNotContains(antes, 'class="notices"')
+            self.client.post('/edit/avisos/', self.datos_aviso(
+                tipo='suspension', titulo='Sin recorrido a Cerro', mensaje='Por nieve',
+                desde='2026-10-21', hasta='2026-10-22',
+            ))
+            despues = self.client.get('/vivo/inicio/')
+            self.client.post('/edit/avisos/', self.datos_aviso(tipo='oferta', titulo='Futuro', desde='2026-11-01'))
+            futuro = self.client.get('/vivo/inicio/')
+        self.assertNotEqual(antes['ETag'], despues['ETag'])
+        self.assertContains(despues, 'Sin recorrido a Cerro')
+        self.assertContains(despues, 'role="alert"')
+        self.assertNotContains(futuro, 'Futuro')
+
+    def test_aviso_con_fechas_invertidas_no_se_guarda(self):
+        self.client.force_login(self.staff)
+        r = self.client.post('/edit/avisos/', self.datos_aviso(desde='2026-10-22', hasta='2026-10-21'))
+        self.assertContains(r, 'La fecha final no puede ser anterior')
+
+    def test_eliminar_aviso_del_panel_invalida(self):
+        aviso = self.Aviso.objects.create(titulo='Oferta de prueba', tipo='oferta')
+        self.client.force_login(self.staff)
+        self.assertContains(self.client.get('/vivo/inicio/'), 'Oferta de prueba')
+        self.client.post('/edit/avisos/', {'accion': 'eliminar', 'aviso': aviso.pk})
+        self.assertNotContains(self.client.get('/vivo/inicio/'), 'Oferta de prueba')
 
     def test_eliminar_feriado_del_panel_invalida(self):
         feriado = self.Feriado.objects.create(fecha='2026-10-21', nombre='Dia de prueba')

@@ -1,14 +1,16 @@
 import json
 from datetime import timedelta
 
+from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotModified
+from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from . import vivo
 from .clima import clima_actual
-from .models import Feriado, Horario, Oficina, Ruta
+from .models import Aviso, Feriado, Horario, Oficina, Ruta
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
@@ -74,7 +76,21 @@ def _contexto_inicio():
     else:
         hoy_label = f"Hoy es {DIAS[hoy.weekday()]} {hoy.day} de {MESES[hoy.month - 1]}"
 
-    return {"hoy_label": hoy_label, "salidas": salidas}
+    avisos = (
+        Aviso.objects.filter(activo=True)
+        .filter(Q(desde__isnull=True) | Q(desde__lte=hoy))
+        .filter(Q(hasta__isnull=True) | Q(hasta__gte=hoy))
+    )
+    orden = {Aviso.Tipo.SUSPENSION: 0, Aviso.Tipo.OFERTA: 1, Aviso.Tipo.INFO: 2}
+    avisos = sorted(avisos, key=lambda a: orden[a.tipo])  # estable: dentro del tipo, el mas nuevo primero
+    zonas = {p: [] for p in Aviso.Posicion.values}
+    for a in avisos:
+        zonas[a.posicion].append(a)
+
+    return {
+        "hoy_label": hoy_label, "salidas": salidas,
+        "avisos_arriba": zonas["arriba"], "avisos_medio": zonas["medio"], "avisos_boton": zonas["boton"],
+    }
 
 
 def _contexto_horarios():
@@ -123,6 +139,7 @@ def vivo_fragmento(request, nombre):
     respuesta["ETag"] = etag
     respuesta["Cache-Control"] = "no-cache"
     respuesta["X-Robots-Tag"] = "noindex"
+    respuesta["X-Site-Version"] = settings.SITE_VERSION
     return respuesta
 
 

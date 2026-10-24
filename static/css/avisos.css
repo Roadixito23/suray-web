@@ -1,0 +1,62 @@
+/* Avisos de Inicio (y vista previa del panel). Los colores llegan como --n-main, --n-alt y --n-ink;
+   sin ellos se usan los del tipo de aviso. */
+.notices { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; margin: 1.5rem 0; }
+.notice {
+  min-width: 0;
+  box-sizing: border-box;
+  --n-main: var(--accent);
+  --n-alt: var(--n-main);
+  --n-ink: #fff;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--bg-panel);
+  color: var(--n-ink);
+  border-left: 10px solid var(--n-main);
+  padding: 1rem 1.25rem;
+}
+.notice--suspension { --n-main: #FF5C7A; }
+.notice--info { --n-main: #7FB2FF; }
+.notice--solido { background: var(--n-main); border-left-color: var(--n-alt); }
+.notice--degradado { background: linear-gradient(110deg, var(--n-main), var(--n-alt)); border-left-color: var(--n-alt); }
+.notice__title { color: inherit; text-shadow: none; font-size: 1.2rem; margin: 0 0 .25rem; }
+.notice__text { margin: 0; max-width: none; }
+.notice__body { flex: 1 1 auto; min-width: 0; }
+.notice__img { flex: 0 0 5.5rem; }
+.notice__img img { display: block; width: 100%; height: 5.5rem; object-fit: cover; }
+
+/* Cartel grande: imagen arriba a todo el ancho y titulo grande. */
+.notice--cartel { flex-direction: column; gap: 0; padding: 0; border-left-width: 0; border-top: 10px solid var(--n-main); }
+.notice--cartel.notice--solido, .notice--cartel.notice--degradado { border-top-color: var(--n-alt); }
+.notice--cartel .notice__img { flex: none; width: 100%; }
+.notice--cartel .notice__img img { height: auto; max-height: 22rem; aspect-ratio: 16 / 7; }
+.notice--cartel .notice__body { padding: 1.5rem 1.5rem 1.75rem; width: 100%; box-sizing: border-box; }
+.notice--cartel .notice__title { font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.15; margin-bottom: .5rem; }
+.notice--cartel .notice__text { font-size: 1.2rem; }
+
+/* Noticiero: el titulo queda fijo y el texto corre de izquierda a derecha en bucle. Para que
+   la direccion y la velocidad se eligen en el panel (clases ticker--izq_der / ticker--der_izq). */
+.notice--carrusel { align-items: center; }
+.notice--carrusel .notice__body { overflow: hidden; }
+.notice__body--ticker { display: flex; align-items: center; gap: 1rem; }
+.notice__body--ticker .notice__title { flex: 0 0 auto; margin: 0; padding-right: 1rem; border-right: 3px solid var(--n-alt); }
+.ticker { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.ticker__track { display: flex; width: max-content; animation: ticker-ltr linear infinite; }
+.ticker--der_izq .ticker__track { animation-name: ticker-rtl; }
+.ticker__item { flex: 0 0 auto; min-width: 100vw; padding-right: 3rem; font-size: 1.15rem; white-space: nowrap; box-sizing: content-box; }
+.ticker:hover .ticker__track, .ticker:focus-within .ticker__track { animation-play-state: paused; }
+@keyframes ticker-ltr { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@keyframes ticker-rtl { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track { animation: none; width: auto; }
+  .ticker__item { white-space: normal; min-width: 0; }
+  .ticker__item[aria-hidden] { display: none; }
+}
+@media (max-width: 640px) {
+  .notice:not(.notice--cartel):not(.notice--carrusel) { flex-direction: column; }
+  .notice__body--ticker { flex-direction: column; align-items: flex-start; gap: .35rem; }
+  .notice__body--ticker .notice__title { border-right: 0; padding-right: 0; }
+  .ticker { width: 100%; }
+  .notice__img { flex-basis: auto; width: 100%; }
+  .notice:not(.notice--cartel) .notice__img img { height: 9rem; }
+}

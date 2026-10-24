@@ -1,3 +1,5 @@
+  {% include "sitio/_avisos_zona.html" with zona=avisos_arriba %}
+
   <h1 class="today">{{ hoy_label }}</h1>
 
   <h2 class="board-title">Próximas salidas</h2>
@@ -28,3 +30,11 @@
     <p>Aún no hay horarios cargados.</p>
     {% endfor %}
   </div>
+
+  {% include "sitio/_avisos_zona.html" with zona=avisos_medio %}
+
+  <nav class="quick-links" aria-label="Más información">
+    <a class="btn btn--brand" href="{% url 'sitio:horarios' %}">Todos los horarios</a>
+  </nav>
+
+  {% include "sitio/_avisos_zona.html" with zona=avisos_boton %}

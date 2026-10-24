@@ -1,0 +1,5 @@
+{% if zona %}
+<section class="notices" aria-label="Avisos importantes">
+  {% for aviso in zona %}{% include "sitio/_aviso.html" %}{% endfor %}
+</section>
+{% endif %}

@@ -1,0 +1,16 @@
+{% if avisos %}
+<ul class="list">
+  {% for a in avisos %}
+  <li class="list__item">
+    <span class="list__main"><strong>{{ a.titulo }}</strong> <em class="tag">{{ a.get_tipo_display }}</em> <em class="tag">{{ a.get_formato_display }}</em> <em class="tag">{{ a.get_posicion_display }}</em>{% if a.desde or a.hasta %} · {% if a.desde %}{{ a.desde|date:"d/m/y" }}{% else %}…{% endif %} – {% if a.hasta %}{{ a.hasta|date:"d/m/y" }}{% else %}…{% endif %}{% endif %}{% if not a.activo %} · sin publicar{% endif %}</span>
+    <a class="btn btn--small" href="{% url 'sitio:edit_aviso' a.pk %}">Editar</a>
+    <form method="post" onsubmit="return confirm('¿Eliminar este aviso?');">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="eliminar">
+      <input type="hidden" name="aviso" value="{{ a.pk }}">
+      <button class="btn btn--small btn--danger" type="submit">Eliminar</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p>{{ vacio }}</p>{% endif %}
