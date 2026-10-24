@@ -1,4 +1,5 @@
 {% extends "edit/base.html" %}
+{% load static %}
 
 {% block title %}Horarios{% endblock %}
 
@@ -53,6 +54,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/formato-hora.js' %}?v={{ site_version }}"></script>
 <script>
   // Agregar/quitar filas. Sin JS el formulario sigue funcionando con la fila vacia de cada ciudad.
   document.querySelectorAll('.city').forEach(function (city) {

@@ -184,6 +184,18 @@ class EditPanelTests(TestCase):
         self.assertEqual(self.horas(self.aysen), ['07:00', '08:15'])
         self.assertEqual(self.horas(self.coy), ['09:30'])
 
+    def test_pagina_de_horarios_carga_el_formato_automatico_hh_mm(self):
+        self.entrar()
+        r = self.client.get(self.url)
+        self.assertContains(r, 'js/formato-hora.js')
+        self.assertContains(r, 'name="horas_%d"' % self.aysen.id)
+        self.assertContains(r, 'maxlength="5"')
+
+    def test_guardar_acepta_las_horas_tal_como_las_deja_el_formato_automatico(self):
+        self.entrar()
+        self.client.post(self.url, {f'horas_{self.aysen.id}': ['07:30', '18:45', '00:00', '23:59']})
+        self.assertEqual(self.horas(self.aysen), ['00:00', '07:30', '18:45', '23:59'])
+
     def test_hora_invalida_no_guarda_nada(self):
         self.Horario.objects.create(ruta=self.aysen, tipo_dia=self.tipo(), hora_salida=self.time(6, 0))
         self.entrar()
