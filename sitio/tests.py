@@ -552,3 +552,38 @@ class VivoTests(TestCase):
             r = self.client.get('/vivo/inicio/')
         self.assertContains(r, '<time class="departure__time">09:00</time>')
         self.assertNotContains(r, '<time class="departure__time">08:00</time>')
+
+    def test_cache_cambia_al_cambiar_el_minuto(self):
+        self.crear(8, 0)
+        self.crear(9, 0)
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 7, 59)):
+            self.assertContains(self.client.get('/vivo/inicio/'), 'data-hora="08:00"')
+        # Un minuto despues, sin vaciar la cache: la clave nueva fuerza el recalculo.
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 8, 1)):
+            r = self.client.get('/vivo/inicio/')
+        self.assertContains(r, 'data-hora="09:00"')
+        self.assertNotContains(r, 'data-hora="08:00"')
+
+    def test_invalidar_borra_minuto_actual_y_anterior(self):
+        from django.core.cache import cache
+
+        from . import vivo
+
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 8, 0)):
+            vivo.fragmento('inicio')
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 8, 1)):
+            vivo.invalidar()
+            self.assertIsNone(cache.get('vivo:inicio:08:00'))
+
+    def test_guardar_horarios_enlaza_al_sitio(self):
+        self.client.force_login(self.staff)
+        r = self.client.post('/edit/horarios/lv/', {f'horas_{self.ruta.pk}': '08:00'}, follow=True)
+        self.assertContains(r, 'Horarios guardados.')
+        self.assertContains(r, 'href="/"')
+        self.assertContains(r, 'href="/horarios/"')
+
+    def test_feriado_agregado_enlaza_al_sitio(self):
+        self.client.force_login(self.staff)
+        r = self.client.post('/edit/feriados/', {'fecha': '2026-12-25', 'nombre': 'Navidad'}, follow=True)
+        self.assertContains(r, 'Feriado agregado.')
+        self.assertContains(r, 'href="/horarios/"')

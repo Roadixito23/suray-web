@@ -25,6 +25,21 @@
     return res;
   }
 
+  // Milisegundos hasta la salida de "hoy" mas proxima (lista de "HH:MM"), o null si no queda
+  // ninguna. Sirve para sondear justo cuando pasa la hora y la tarjeta debe saltar a la siguiente.
+  function msHastaSalida(horas, ahora) {
+    var mejor = null;
+    horas.forEach(function (h) {
+      var m = /^(\d{1,2}):(\d{2})$/.exec(h);
+      if (!m) { return; }
+      var objetivo = new Date(ahora.getTime());
+      objetivo.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+      var ms = objetivo.getTime() - ahora.getTime();
+      if (ms > 0 && (mejor === null || ms < mejor)) { mejor = ms; }
+    });
+    return mejor;
+  }
+
   function hhmm(fecha) {
     function p(n) { return ('0' + n).slice(-2); }
     return p(fecha.getHours()) + ':' + p(fecha.getMinutes());
@@ -70,7 +85,13 @@
     function programar() {
       ventana.clearTimeout(timer);
       if (doc.hidden) { return; }
-      timer = ventana.setTimeout(sondear, proximoRetraso(intervalo, fallos, Math.random()));
+      var retraso = proximoRetraso(intervalo, fallos, Math.random());
+      var horas = Array.prototype.map.call(
+        caja.querySelectorAll('[data-hora][data-dia="hoy"]'), function (e) { return e.getAttribute('data-hora'); });
+      var salida = msHastaSalida(horas, new Date());
+      // 1,5 s de margen para que el servidor ya vea la hora como pasada.
+      if (salida !== null && fallos === 0 && salida + 1500 < retraso) { retraso = salida + 1500; }
+      timer = ventana.setTimeout(sondear, retraso);
     }
 
     function sondear() {
@@ -108,6 +129,6 @@
     iniciar(document, window);
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { proximoRetraso: proximoRetraso, bloquesCambiados: bloquesCambiados, hhmm: hhmm, iniciar: iniciar };
+    module.exports = { proximoRetraso: proximoRetraso, bloquesCambiados: bloquesCambiados, msHastaSalida: msHastaSalida, hhmm: hhmm, iniciar: iniciar };
   }
 }(this));

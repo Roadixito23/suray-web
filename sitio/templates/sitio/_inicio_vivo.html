@@ -13,7 +13,7 @@
       </p>
       {% endif %}
       {% if salida.hora %}
-      <p class="departure__next">
+      <p class="departure__next" data-hora="{{ salida.hora }}" data-dia="{{ salida.dia }}">
         <time class="departure__time">{{ salida.hora }}</time>
         <span class="departure__day">{{ salida.dia }}</span>
       </p>

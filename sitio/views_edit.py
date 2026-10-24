@@ -8,6 +8,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Max
+from django.utils.html import format_html
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -132,6 +133,16 @@ def _bloques(tipo_dia, post=None):
     return bloques, hay_errores
 
 
+def _aviso_publicado(texto):
+    """Mensaje de guardado con enlaces para comprobar el cambio en el sitio publico."""
+    return format_html(
+        '{} Los visitantes lo ven en unos 15 s: ver '
+        '<a href="{}" target="_blank" rel="noopener">Inicio</a> o '
+        '<a href="{}" target="_blank" rel="noopener">Horarios</a>.',
+        texto, reverse("sitio:inicio"), reverse("sitio:horarios"),
+    )
+
+
 @no_indexable
 @solo_staff
 @require_http_methods(["GET", "POST"])
@@ -156,7 +167,7 @@ def edit_horarios(request, tipo):
                     ])
                 Horario.objects.filter(tipo_dia=tipo_dia).update(es_horario_especial=especial)
             vivo.invalidar()  # bulk_create y update() no disparan señales
-            messages.success(request, "Horarios guardados.")
+            messages.success(request, _aviso_publicado("Horarios guardados."))
             return HttpResponseRedirect(reverse("sitio:edit_horarios", args=[tipo]))
         messages.error(request, "Revisa las horas marcadas. No se guardó nada.")
     else:
@@ -221,13 +232,13 @@ def edit_feriados(request):
             feriado = get_object_or_404(Feriado, pk=request.POST.get("feriado"))
             feriado.delete()
             vivo.invalidar()
-            messages.success(request, f"Feriado eliminado: {feriado.nombre}.")
+            messages.success(request, _aviso_publicado(f"Feriado eliminado: {feriado.nombre}."))
             return redirect("sitio:edit_feriados")
         form = FeriadoForm(request.POST)
         if form.is_valid():
             form.save()
             vivo.invalidar()
-            messages.success(request, "Feriado agregado.")
+            messages.success(request, _aviso_publicado("Feriado agregado."))
             return redirect("sitio:edit_feriados")
         messages.error(request, "Revisa los campos marcados. No se guardó nada.")
     hoy = timezone.localdate()
