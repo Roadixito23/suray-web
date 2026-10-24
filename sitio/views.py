@@ -1,9 +1,12 @@
 import json
 from datetime import timedelta
 
+from django.http import Http404, HttpResponse, HttpResponseNotModified
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.http import require_GET
 
+from . import vivo
 from .clima import clima_actual
 from .models import Feriado, Horario, Oficina, Ruta
 
@@ -22,7 +25,7 @@ def _tipo_dia_para(fecha, es_feriado):
     return Horario.TipoDia.LUNES_VIERNES
 
 
-def inicio(request):
+def _contexto_inicio():
     hoy = timezone.localdate()
     ahora = timezone.localtime().time()
     manana = hoy + timedelta(days=1)
@@ -71,10 +74,10 @@ def inicio(request):
     else:
         hoy_label = f"Hoy es {DIAS[hoy.weekday()]} {hoy.day} de {MESES[hoy.month - 1]}"
 
-    return render(request, "sitio/inicio.html", {"hoy_label": hoy_label, "salidas": salidas})
+    return {"hoy_label": hoy_label, "salidas": salidas}
 
 
-def horarios(request):
+def _contexto_horarios():
     origenes = list(Ruta.objects.order_by("id").values_list("origen", flat=True).distinct())
 
     tarjetas = []
@@ -95,7 +98,32 @@ def horarios(request):
             "especial": especial,
         })
 
-    return render(request, "sitio/horarios.html", {"tarjetas": tarjetas})
+    return {"tarjetas": tarjetas}
+
+
+def inicio(request):
+    html, etag = vivo.construir("inicio")
+    return render(request, "sitio/inicio.html", {"vivo_html": html, "vivo_etag": etag})
+
+
+def horarios(request):
+    html, etag = vivo.construir("horarios")
+    return render(request, "sitio/horarios.html", {"vivo_html": html, "vivo_etag": etag})
+
+
+@require_GET
+def vivo_fragmento(request, nombre):
+    if nombre not in vivo.PARCIALES:
+        raise Http404
+    html, etag = vivo.fragmento(nombre)
+    if request.headers.get("If-None-Match") == etag:
+        respuesta = HttpResponseNotModified()
+    else:
+        respuesta = HttpResponse(html)
+    respuesta["ETag"] = etag
+    respuesta["Cache-Control"] = "no-cache"
+    respuesta["X-Robots-Tag"] = "noindex"
+    return respuesta
 
 
 def contacto(request):

@@ -1,0 +1,26 @@
+{% for tarjeta in tarjetas %}
+<section class="day-card
+  {% if tarjeta.valor == 'LV' %}day-card--weekday
+  {% elif tarjeta.valor == 'SAB' %}day-card--saturday
+  {% else %}day-card--sunday{% endif %}">
+  <h2>{{ tarjeta.etiqueta }}</h2>
+  {% if tarjeta.especial %}<p class="special-badge">Horario especial</p>{% endif %}
+
+  {% for ciudad in tarjeta.ciudades %}
+  <div class="city-block">
+    <h3>Salidas desde {{ ciudad.nombre }}</h3>
+    {% if ciudad.horas %}
+    <ul class="time-list">
+      {% for hora in ciudad.horas %}
+      <li><time>{{ hora }}</time></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-state">
+      {% if tarjeta.valor == 'DF' %}Sin servicio por feriado.{% else %}Sin horarios.{% endif %}
+    </p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}

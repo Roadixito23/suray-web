@@ -432,3 +432,22 @@ p { margin: 0 0 1rem; max-width: 60ch; }
   .site-nav.is-open .site-nav__links li:nth-child(4) { transition-delay: .26s; }
   .nav-toggle::after { transition: transform .3s ease; }
 }
+
+/* Actualizacion en vivo (static/js/tiempo-real.js) */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.live-status { margin: .75rem 0 0; font-size: .85rem; color: var(--text-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .live-flash { animation: live-flash 1.2s ease-out; }
+}
+@keyframes live-flash {
+  0%   { box-shadow: 0 0 0 4px var(--accent); }
+  100% { box-shadow: 0 0 0 4px transparent; }
+}

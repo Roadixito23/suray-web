@@ -436,3 +436,119 @@ class ScriptDespliegueTests(TestCase):
         self.assertEqual(m.LOCK_FILE, '/home/x/d/produccion_deploy.lock')
         self.assertEqual(m.FLAG_FILE, '/home/x/d/produccion_deploy.flag')
         self.assertEqual(m.ENV_FILE, '/home/x/d/produccion_deploy.env')
+
+
+class VivoTests(TestCase):
+    """Fragmentos de Inicio y Horarios que la pagina vuelve a pedir sola."""
+
+    def setUp(self):
+        from datetime import time
+
+        from django.contrib.auth.models import User
+        from django.core.cache import cache
+
+        from .models import Feriado, Horario, Ruta
+
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.Horario, self.Feriado, self.time = Horario, Feriado, time
+        self.ruta = Ruta.objects.create(origen='Coyhaique', destino='Puerto Aysén')
+        self.staff = User.objects.create_user('staff', password='clave-segura-1', is_staff=True)
+        patcher = mock.patch('sitio.views.clima_actual', return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def hora_local(self, y, m, d, hh, mm):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        return datetime(y, m, d, hh, mm, tzinfo=ZoneInfo('America/Santiago'))
+
+    def crear(self, hh, mm, tipo=None):
+        return self.Horario.objects.create(
+            ruta=self.ruta, tipo_dia=tipo or self.Horario.TipoDia.LUNES_VIERNES, hora_salida=self.time(hh, mm))
+
+    def test_fragmentos_con_etag_y_cabeceras(self):
+        for nombre in ('inicio', 'horarios'):
+            r = self.client.get(f'/vivo/{nombre}/')
+            self.assertEqual(r.status_code, 200)
+            self.assertTrue(r['ETag'])
+            self.assertEqual(r['Cache-Control'], 'no-cache')
+            self.assertEqual(r['X-Robots-Tag'], 'noindex')
+
+    def test_nombre_desconocido_y_metodo_no_permitido(self):
+        self.assertEqual(self.client.get('/vivo/otro/').status_code, 404)
+        self.assertEqual(self.client.post('/vivo/inicio/').status_code, 405)
+
+    def test_if_none_match_devuelve_304(self):
+        etag = self.client.get('/vivo/horarios/')['ETag']
+        r = self.client.get('/vivo/horarios/', headers={'If-None-Match': etag})
+        self.assertEqual(r.status_code, 304)
+        self.assertEqual(r.content, b'')
+
+    def test_la_pagina_completa_trae_el_mismo_etag_que_el_fragmento(self):
+        self.crear(8, 0)
+        from django.utils.html import escape
+
+        for url, nombre in (('/', 'inicio'), ('/horarios/', 'horarios')):
+            pagina = self.client.get(url)
+            etag = self.client.get(f'/vivo/{nombre}/')['ETag']
+            self.assertContains(pagina, 'data-live-etag="%s"' % escape(etag))
+            self.assertContains(pagina, '/static/js/tiempo-real.')
+
+    def test_crear_un_horario_cambia_el_fragmento_al_instante(self):
+        antes = self.client.get('/vivo/horarios/')
+        self.crear(6, 45)
+        despues = self.client.get('/vivo/horarios/')
+        self.assertNotEqual(antes['ETag'], despues['ETag'])
+        self.assertContains(despues, '06:45')
+
+    def test_guardar_desde_el_panel_invalida_sin_esperar_el_ttl(self):
+        self.client.force_login(self.staff)
+        antes = self.client.get('/vivo/horarios/')['ETag']
+        r = self.client.post('/edit/horarios/lv/', {f'horas_{self.ruta.id}': ['07:10']})
+        self.assertEqual(r.status_code, 302)
+        r = self.client.get('/vivo/horarios/')
+        self.assertNotEqual(r['ETag'], antes)
+        self.assertContains(r, '07:10')
+
+    def test_marcar_horario_especial_tambien_se_ve(self):
+        self.crear(8, 0)
+        self.client.force_login(self.staff)
+        self.assertNotContains(self.client.get('/vivo/horarios/'), 'Horario especial')
+        self.client.post('/edit/horarios/lv/', {f'horas_{self.ruta.id}': ['08:00'], 'especial': 'on'})
+        self.assertContains(self.client.get('/vivo/horarios/'), 'Horario especial')
+
+    def test_feriado_del_panel_cambia_inicio(self):
+        self.crear(23, 0)
+        self.client.force_login(self.staff)
+        hoy = self.hora_local(2026, 10, 21, 10, 0)  # miercoles
+        with mock.patch('django.utils.timezone.now', return_value=hoy):
+            antes = self.client.get('/vivo/inicio/')
+            self.assertContains(antes, 'Hoy es miércoles')
+            self.client.post('/edit/feriados/', {'fecha': '2026-10-21', 'nombre': 'Dia de prueba', 'sin_servicio': 'on'})
+            despues = self.client.get('/vivo/inicio/')
+        self.assertNotEqual(antes['ETag'], despues['ETag'])
+        self.assertContains(despues, 'Hoy es feriado: Dia de prueba')
+
+    def test_eliminar_feriado_del_panel_invalida(self):
+        feriado = self.Feriado.objects.create(fecha='2026-10-21', nombre='Dia de prueba')
+        self.client.force_login(self.staff)
+        hoy = self.hora_local(2026, 10, 21, 10, 0)
+        with mock.patch('django.utils.timezone.now', return_value=hoy):
+            self.assertContains(self.client.get('/vivo/inicio/'), 'Hoy es feriado')
+            self.client.post('/edit/feriados/', {'accion': 'eliminar', 'feriado': feriado.pk})
+            self.assertContains(self.client.get('/vivo/inicio/'), 'Hoy es miércoles')
+
+    def test_inicio_avanza_con_el_reloj_cuando_vence_el_cache(self):
+        from django.core.cache import cache
+
+        self.crear(8, 0)
+        self.crear(9, 0)
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 7, 30)):
+            self.assertContains(self.client.get('/vivo/inicio/'), '<time class="departure__time">08:00</time>')
+        cache.clear()  # equivale a que pasen los 15 s del TTL
+        with mock.patch('django.utils.timezone.now', return_value=self.hora_local(2026, 10, 21, 8, 30)):
+            r = self.client.get('/vivo/inicio/')
+        self.assertContains(r, '<time class="departure__time">09:00</time>')
+        self.assertNotContains(r, '<time class="departure__time">08:00</time>')

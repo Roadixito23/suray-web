@@ -14,38 +14,16 @@
     <button class="btn" id="downloadBtn" type="button">Descargar como imagen</button>
   </div>
 
-  <div id="schedulesCapture">
-    {% for tarjeta in tarjetas %}
-    <section class="day-card
-      {% if tarjeta.valor == 'LV' %}day-card--weekday
-      {% elif tarjeta.valor == 'SAB' %}day-card--saturday
-      {% else %}day-card--sunday{% endif %}">
-      <h2>{{ tarjeta.etiqueta }}</h2>
-      {% if tarjeta.especial %}<p class="special-badge">Horario especial</p>{% endif %}
-
-      {% for ciudad in tarjeta.ciudades %}
-      <div class="city-block">
-        <h3>Salidas desde {{ ciudad.nombre }}</h3>
-        {% if ciudad.horas %}
-        <ul class="time-list">
-          {% for hora in ciudad.horas %}
-          <li><time>{{ hora }}</time></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="empty-state">
-          {% if tarjeta.valor == 'DF' %}Sin servicio por feriado.{% else %}Sin horarios.{% endif %}
-        </p>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </section>
-    {% endfor %}
+  <div id="schedulesCapture" data-live-url="{% url 'sitio:vivo' 'horarios' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000">
+{{ vivo_html|safe }}
   </div>
+  <p class="live-status" data-live-status hidden></p>
+  <p class="visually-hidden" role="status" aria-live="polite" data-live-announce></p>
 </main>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/tiempo-real.js' %}?v={{ site_version }}"></script>
 <script>
   // html2canvas pesa ~200 KB: solo se descarga cuando alguien pide la imagen.
   var downloadBtn = document.getElementById('downloadBtn');
@@ -54,11 +32,12 @@
     var s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
     s.onload = cb;
-    s.onerror = function () { downloadBtn.textContent = 'No se pudo descargar. Intenta de nuevo'; downloadBtn.disabled = false; };
+    s.onerror = function () { downloadBtn.textContent = 'No se pudo descargar. Intenta de nuevo'; downloadBtn.disabled = false; document.getElementById('schedulesCapture').removeAttribute('data-live-busy'); };
     document.head.appendChild(s);
   }
   downloadBtn.addEventListener('click', function () {
     downloadBtn.disabled = true;
+    document.getElementById('schedulesCapture').setAttribute('data-live-busy', '');
     downloadBtn.textContent = 'Preparando imagen...';
     loadHtml2canvas(function () {
       html2canvas(document.getElementById('schedulesCapture')).then(function (canvas) {
@@ -71,6 +50,7 @@
         link.click();
         downloadBtn.textContent = 'Descargar como imagen';
         downloadBtn.disabled = false;
+        document.getElementById('schedulesCapture').removeAttribute('data-live-busy');
       });
     });
   });

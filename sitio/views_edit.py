@@ -15,6 +15,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
+from . import vivo
 from .forms import CuentaForm, EditAuthenticationForm, FeriadoForm, HorarioOficinaFormSet, OficinaForm
 from .models import Feriado, Horario, Oficina, Ruta
 
@@ -154,6 +155,7 @@ def edit_horarios(request, tipo):
                         for hora in sorted(nuevas - ya_estan)
                     ])
                 Horario.objects.filter(tipo_dia=tipo_dia).update(es_horario_especial=especial)
+            vivo.invalidar()  # bulk_create y update() no disparan señales
             messages.success(request, "Horarios guardados.")
             return HttpResponseRedirect(reverse("sitio:edit_horarios", args=[tipo]))
         messages.error(request, "Revisa las horas marcadas. No se guardó nada.")
@@ -218,11 +220,13 @@ def edit_feriados(request):
         if request.POST.get("accion") == "eliminar":
             feriado = get_object_or_404(Feriado, pk=request.POST.get("feriado"))
             feriado.delete()
+            vivo.invalidar()
             messages.success(request, f"Feriado eliminado: {feriado.nombre}.")
             return redirect("sitio:edit_feriados")
         form = FeriadoForm(request.POST)
         if form.is_valid():
             form.save()
+            vivo.invalidar()
             messages.success(request, "Feriado agregado.")
             return redirect("sitio:edit_feriados")
         messages.error(request, "Revisa los campos marcados. No se guardó nada.")

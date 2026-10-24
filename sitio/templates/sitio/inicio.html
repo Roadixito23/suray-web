@@ -7,39 +7,18 @@
 
 {% block content %}
 <main class="container">
-  <h1 class="today">{{ hoy_label }}</h1>
-
-  <h2 class="board-title">Próximas salidas</h2>
-  <div class="board">
-    {% for salida in salidas %}
-    <section class="departure">
-      <h3>Desde {{ salida.origen }}</h3>
-      {% if salida.clima %}
-      <p class="departure__weather">
-        <span class="departure__weather-icon" aria-hidden="true">{{ salida.clima.icono }}</span>
-        <span class="departure__weather-temp">{{ salida.clima.temperatura }}°C</span>
-        <span class="departure__weather-desc">{{ salida.clima.descripcion }}</span>
-      </p>
-      {% endif %}
-      {% if salida.hora %}
-      <p class="departure__next">
-        <time class="departure__time">{{ salida.hora }}</time>
-        <span class="departure__day">{{ salida.dia }}</span>
-      </p>
-      {% if salida.despues %}
-      <p class="departure__later">Después: {{ salida.despues|join:" · " }}</p>
-      {% endif %}
-      {% else %}
-      <p class="departure__notice">{{ salida.aviso }}</p>
-      {% endif %}
-    </section>
-    {% empty %}
-    <p>Aún no hay horarios cargados.</p>
-    {% endfor %}
+  <div data-live-url="{% url 'sitio:vivo' 'inicio' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000">
+{{ vivo_html|safe }}
   </div>
+  <p class="live-status" data-live-status hidden></p>
+  <p class="visually-hidden" role="status" aria-live="polite" data-live-announce></p>
 
   <nav class="quick-links" aria-label="Más información">
     <a class="btn btn--brand" href="{% url 'sitio:horarios' %}">Todos los horarios</a>
   </nav>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/tiempo-real.js' %}?v={{ site_version }}"></script>
 {% endblock %}

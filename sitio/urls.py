@@ -7,6 +7,7 @@ app_name = "sitio"
 urlpatterns = [
     path("", views.inicio, name="inicio"),
     path("horarios/", views.horarios, name="horarios"),
+    path("vivo/<str:nombre>/", views.vivo_fragmento, name="vivo"),
     path("contacto/", views.contacto, name="contacto"),
     path("ruta/", views.ruta, name="ruta"),
     path("edit/", views_edit.edit_inicio, name="edit_inicio"),
