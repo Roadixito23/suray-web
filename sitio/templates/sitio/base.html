@@ -43,17 +43,7 @@
 <link rel="stylesheet" href="{% static 'css/base.css' %}?v={{ site_version }}">
 {% block extra_css %}{% endblock %}
 <style>
-/* Criticos: inline para que el splash y el enlace de salto nunca se vean sin estilo. */
-.skip-link {
-  position: absolute;
-  left: -999px;
-  background: #fff;
-  color: var(--color-primary-navy);
-  padding: .6rem 1rem;
-  font-weight: 700;
-  z-index: 100;
-}
-.skip-link:focus { left: .5rem; top: .5rem; }
+/* Critico: inline para que el splash nunca se vea sin estilo. */
 .sin-splash .splash { display: none; }
 /* Splash: solo CSS (no depende de JS), se muestra en cada carga y se retira solo. */
 .splash {
@@ -85,7 +75,6 @@
 </head>
 <body>
 {% block splash %}{% endblock %}
-<a class="skip-link" href="#contenido">Ir al contenido</a>
 
 <header class="site-header">
 <nav class="site-nav" aria-label="Principal">
@@ -122,11 +111,6 @@
 </svg>
 <footer class="site-footer">
   <div class="container">
-    <nav class="site-footer__nav" aria-label="Secciones del sitio">
-      <a href="{% url 'sitio:horarios' %}">Horarios</a>
-      <a href="{% url 'sitio:ruta' %}">Ruta</a>
-      <a href="{% url 'sitio:contacto' %}">Contacto</a>
-    </nav>
     <div class="site-footer__top">
       <div class="site-footer__social">
         <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
