@@ -6,6 +6,38 @@
 <link rel="stylesheet" href="{% static 'css/avisos.css' %}?v={{ site_version }}">
 {% endblock %}
 
+{% block head_extra %}
+<script>
+  // El splash se muestra una sola vez por sesion, al abrir Inicio por primera vez.
+  try {
+    if (sessionStorage.getItem('suray-splash')) { document.documentElement.classList.add('sin-splash'); }
+    else { sessionStorage.setItem('suray-splash', '1'); }
+  } catch (e) {}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  "name": "Buses Suray | Suray Cargo",
+  "image": "{{ site_url }}{% static 'icons/og-image.jpg' %}",
+  "description": "Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique, por la ruta 240.",
+  "url": "{{ site_url }}/",
+  "sameAs": ["https://instagram.com/buses.suray.cargo", "https://facebook.com/buses.suray.cargo"],
+  "areaServed": {"@type": "AdministrativeArea", "name": "Aysén del General Carlos Ibáñez del Campo"},
+  "address": {"@type": "PostalAddress", "addressLocality": "Puerto Aysén", "addressRegion": "Aysén", "addressCountry": "CL"}
+}
+</script>
+{% endblock %}
+
+{% block splash %}
+<div class="splash" aria-hidden="true">
+  <img src="{% static 'img/logo-480.webp' %}"
+       srcset="{% static 'img/logo-480.webp' %} 480w, {% static 'img/logo-960.webp' %} 960w"
+       sizes="(max-width: 393px) 60vw, 236px"
+       alt="" width="236" height="133">
+</div>
+{% endblock %}
+
 {% block content %}
 <main class="container">
   <div data-live-url="{% url 'sitio:vivo' 'inicio' %}" data-live-etag="{{ vivo_etag }}" data-live-interval="15000" data-live-version="{{ site_version }}">

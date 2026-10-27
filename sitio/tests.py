@@ -745,3 +745,61 @@ class VivoTests(TestCase):
         r = self.client.post('/edit/feriados/', {'fecha': '2026-12-25', 'nombre': 'Navidad'}, follow=True)
         self.assertContains(r, 'Feriado agregado.')
         self.assertContains(r, 'href="/horarios/"')
+
+
+@override_settings(
+    ALLOWED_HOSTS=['*'],
+    SITE_URL='https://suray.cl',
+    STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    },
+)
+class SeoTests(TestCase):
+    def setUp(self):
+        self.client.defaults['HTTP_HOST'] = 'suray.cl'
+
+    def test_paginas_publicas_traen_meta_y_canonical(self):
+        for ruta in ('/', '/horarios/', '/ruta/', '/contacto/'):
+            html = self.client.get(ruta).content.decode()
+            self.assertIn('property="og:image"', html, ruta)
+            self.assertIn(f'<link rel="canonical" href="https://suray.cl{ruta}">', html, ruta)
+            self.assertIn('rel="manifest"', html, ruta)
+            self.assertIn('index, follow', html, ruta)
+
+    def test_paginas_internas_traen_titulo_descriptivo_y_migas(self):
+        html = self.client.get('/horarios/').content.decode()
+        self.assertIn('<title>Horarios de buses Puerto Aysén', html)
+        self.assertIn('"@type": "BreadcrumbList"', html)
+
+    def test_contacto_incluye_oficinas_en_json_ld(self):
+        from .models import Oficina
+        Oficina.objects.create(ciudad='Coyhaique', tipo='PJ', direccion='Calle </script> 1', telefono='+56 67 123')
+        html = self.client.get('/contacto/').content.decode()
+        self.assertIn('"@type": "BusStation"', html)
+        self.assertIn('"telephone": "+56 67 123"', html)
+        self.assertNotIn('Calle </script>', html.split('application/ld+json')[-1].split('</script>')[0])
+
+    def test_dominio_de_pruebas_no_se_indexa(self):
+        self.client.defaults['HTTP_HOST'] = 'test.suray.cl'
+        self.assertIn('noindex, nofollow', self.client.get('/').content.decode())
+        self.assertEqual(self.client.get('/robots.txt').content.decode(), 'User-agent: *\nDisallow: /\n')
+
+    def test_suray_con_www_tambien_se_indexa(self):
+        self.client.defaults['HTTP_HOST'] = 'www.suray.cl'
+        self.assertIn('index, follow', self.client.get('/').content.decode())
+
+    def test_splash_solo_en_inicio(self):
+        self.assertIn('class="splash"', self.client.get('/').content.decode())
+        self.assertNotIn('class="splash"', self.client.get('/horarios/').content.decode())
+
+    def test_robots_sitemap_y_manifest(self):
+        robots = self.client.get('/robots.txt').content.decode()
+        self.assertIn('Disallow: /edit/', robots)
+        self.assertIn('Sitemap: https://suray.cl/sitemap.xml', robots)
+        sitemap = self.client.get('/sitemap.xml').content.decode()
+        self.assertIn('<loc>https://suray.cl/horarios/</loc>', sitemap)
+        self.assertIn('<loc>https://suray.cl/contacto/</loc>', sitemap)
+        manifest = self.client.get('/manifest.webmanifest').json()
+        self.assertEqual(manifest['start_url'], '/')
+        self.assertEqual(self.client.get('/favicon.ico').status_code, 301)

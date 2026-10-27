@@ -2,13 +2,16 @@ import json
 from datetime import timedelta
 
 from django.conf import settings
-from django.http import Http404, HttpResponse, HttpResponseNotModified
+from django.http import Http404, HttpResponse, HttpResponseNotModified, JsonResponse
 from django.db.models import Q
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.templatetags.static import static
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from . import vivo
+from .context_processors import es_dominio_publico
 from .clima import clima_actual
 from .models import Aviso, Feriado, Horario, Oficina, Ruta
 
@@ -124,7 +127,10 @@ def inicio(request):
 
 def horarios(request):
     html, etag = vivo.construir("horarios")
-    return render(request, "sitio/horarios.html", {"vivo_html": html, "vivo_etag": etag})
+    return render(request, "sitio/horarios.html", {
+        "vivo_html": html, "vivo_etag": etag,
+        "meta_descripcion": "Horarios de salida de Buses Suray entre Puerto Aysén y Coyhaique: lunes a viernes, sábado, domingo y feriados.",
+    })
 
 
 @require_GET
@@ -143,9 +149,95 @@ def vivo_fragmento(request, nombre):
     return respuesta
 
 
+@require_GET
+def favicon(request):
+    # Los navegadores piden /favicon.ico aunque la pagina declare otro icono.
+    return redirect(static("icons/favicon.ico"), permanent=True)
+
+
+@require_GET
+def robots(request):
+    if not es_dominio_publico(request):
+        return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain; charset=utf-8")
+    lineas = [
+        "User-agent: *",
+        "Disallow: /edit/",
+        "Disallow: /admin/",
+        "Disallow: /vivo/",
+        "Disallow: /deploy/",
+        "",
+        f"Sitemap: {settings.SITE_URL}/sitemap.xml",
+        "",
+    ]
+    return HttpResponse("\n".join(lineas), content_type="text/plain; charset=utf-8")
+
+
+@require_GET
+def sitemap(request):
+    urls = "".join(
+        f"<url><loc>{settings.SITE_URL}{reverse('sitio:' + nombre)}</loc></url>"
+        for nombre in ("inicio", "horarios", "ruta", "contacto")
+    )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    )
+    return HttpResponse(xml, content_type="application/xml; charset=utf-8")
+
+
+@require_GET
+def manifest(request):
+    datos = {
+        "name": "Buses Suray | Suray Cargo",
+        "short_name": "Buses Suray",
+        "description": "Horarios, rutas y contacto de Buses Suray entre Puerto Aysén y Coyhaique.",
+        "lang": "es-CL",
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#001959",
+        "theme_color": "#001959",
+        "icons": [
+            {"src": static("icons/icon-192.png"), "sizes": "192x192", "type": "image/png"},
+            {"src": static("icons/icon-512.png"), "sizes": "512x512", "type": "image/png"},
+            {"src": static("icons/icon-maskable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return JsonResponse(datos, content_type="application/manifest+json")
+
+
+def _jsonld_contacto(oficinas):
+    """Datos estructurados de las oficinas (telefono y direccion) como <script> JSON-LD."""
+    datos = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BusStation",
+                "name": f"Buses Suray - {o.get_tipo_display()} ({o.ciudad})",
+                "telephone": o.telefono,
+                "url": f"{settings.SITE_URL}{reverse('sitio:contacto')}",
+                **({"hasMap": o.mapa_url} if o.mapa_url else {}),
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": o.direccion,
+                    "addressLocality": o.ciudad,
+                    "addressRegion": "Aysén",
+                    "addressCountry": "CL",
+                },
+            }
+            for o in oficinas
+        ],
+    }
+    # "<" escapado para que ningun texto editable en /edit/ pueda cerrar el <script>.
+    cuerpo = json.dumps(datos, ensure_ascii=False).replace("<", "\\u003c")
+    return f'<script type="application/ld+json">{cuerpo}</script>'
+
+
 def contacto(request):
     oficinas = Oficina.objects.prefetch_related("horarios")
     context = {
+        "jsonld_contacto": _jsonld_contacto(oficinas),
+        "meta_descripcion": "Teléfonos, direcciones y horarios de atención de las oficinas de Buses Suray en Puerto Aysén y Coyhaique.",
         "ciudades": [
             (ciudad, [o for o in oficinas if o.ciudad == ciudad])
             for ciudad in ("Puerto Aysén", "Coyhaique")
@@ -161,6 +253,7 @@ def ruta(request):
     puerto_aysen = {"lat": -45.40111614852224, "lng": -72.68738064167634}
     coyhaique = {"lat": -45.582039, "lng": -72.078136}
     context = {
+        "meta_descripcion": "Mapa de la ruta 240 entre Puerto Aysén y Coyhaique, con la ubicación de los terminales de Buses Suray.",
         "puerto_aysen_json": json.dumps(puerto_aysen),
         "coyhaique_json": json.dumps(coyhaique),
     }

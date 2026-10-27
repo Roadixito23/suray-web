@@ -288,6 +288,15 @@ p { margin: 0 0 1rem; max-width: 60ch; }
   justify-content: space-between;
   gap: .5rem 1rem;
 }
+.site-footer__nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+.site-footer__nav a {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .site-footer__social { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 .site-footer__social a {
   display: flex;

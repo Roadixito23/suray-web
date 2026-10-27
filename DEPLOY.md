@@ -59,6 +59,7 @@ En la misma pantalla de "Setup Python App", sección **Environment variables**, 
 | `SECRET_KEY` | una clave larga y aleatoria nueva (**no** la de desarrollo) |
 | `DEBUG` | `False` |
 | `ALLOWED_HOSTS` | `suray.cl,www.suray.cl` |
+| `SITE_URL` | `https://suray.cl` (opcional: es el valor por defecto; en test, `https://test.suray.cl`). Define el canonical, Open Graph y sitemap; cualquier otro dominio se sirve con `noindex` |
 | `DB_ENGINE` | `mysql` |
 | `DB_NAME` | `suraycl1_suray_web_server` |
 | `DB_USER` | `suraycl1_suray_w` |

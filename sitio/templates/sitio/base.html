@@ -5,7 +5,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Buses Suray | Suray Cargo{% endblock %}</title>
-<meta name="description" content="Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique. Información de horarios, teléfonos, direcciones, paraderos en ruta 240 y servicios especiales.">
+{% block seo %}
+{% with descripcion=meta_descripcion|default:"Transporte rural de pasajeros con servicio de correspondencia entre Puerto Aysén y Coyhaique. Información de horarios, teléfonos, direcciones, paraderos en ruta 240 y servicios especiales." %}
+<meta name="description" content="{{ descripcion }}">
+<meta name="robots" content="{% if site_indexable %}index, follow, max-image-preview:large{% else %}noindex, nofollow{% endif %}">
+<meta name="theme-color" content="#001959">
+<link rel="canonical" href="{{ site_url }}{{ request.path }}">
+
+<meta property="og:site_name" content="Buses Suray | Suray Cargo">
+<meta property="og:locale" content="es_CL">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}{{ request.path }}">
+<meta property="og:title" content="{% block og_title %}Buses Suray | Suray Cargo{% endblock %}">
+<meta property="og:description" content="{{ descripcion }}">
+<meta property="og:image" content="{{ site_url }}{% static 'icons/og-image.jpg' %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de Buses Suray">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}Buses Suray | Suray Cargo{% endblock %}">
+<meta name="twitter:description" content="{{ descripcion }}">
+<meta name="twitter:image" content="{{ site_url }}{% static 'icons/og-image.jpg' %}">
+{% endwith %}
+{% endblock %}
+
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Buses Suray">
+<link rel="icon" href="{% static 'icons/favicon.ico' %}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32.png' %}">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="manifest" href="{% url 'sitio:manifest' %}">
+{% block head_extra %}{% endblock %}
+{% block jsonld %}{% endblock %}
 <link rel="stylesheet" href="{% static 'css/variables.css' %}?v={{ site_version }}">
 <link rel="stylesheet" href="{% static 'css/base.css' %}?v={{ site_version }}">
 {% block extra_css %}{% endblock %}
@@ -21,6 +54,7 @@
   z-index: 100;
 }
 .skip-link:focus { left: .5rem; top: .5rem; }
+.sin-splash .splash { display: none; }
 /* Splash: solo CSS (no depende de JS), se muestra en cada carga y se retira solo. */
 .splash {
   position: fixed;
@@ -50,12 +84,7 @@
 </style>
 </head>
 <body>
-<div class="splash" aria-hidden="true">
-  <img src="{% static 'img/logo-480.webp' %}"
-       srcset="{% static 'img/logo-480.webp' %} 480w, {% static 'img/logo-960.webp' %} 960w"
-       sizes="(max-width: 393px) 60vw, 236px"
-       alt="" width="236" height="133">
-</div>
+{% block splash %}{% endblock %}
 <a class="skip-link" href="#contenido">Ir al contenido</a>
 
 <header class="site-header">
@@ -93,6 +122,11 @@
 </svg>
 <footer class="site-footer">
   <div class="container">
+    <nav class="site-footer__nav" aria-label="Secciones del sitio">
+      <a href="{% url 'sitio:horarios' %}">Horarios</a>
+      <a href="{% url 'sitio:ruta' %}">Ruta</a>
+      <a href="{% url 'sitio:contacto' %}">Contacto</a>
+    </nav>
     <div class="site-footer__top">
       <div class="site-footer__social">
         <a href="https://instagram.com/buses.suray.cargo" target="_blank" rel="noopener">
@@ -110,20 +144,6 @@
   </div>
 </footer>
 
-<script>
-  // Al volver con "atras" el navegador restaura la pagina sin recargarla: se reinicia el splash.
-  window.addEventListener('pageshow', function (e) {
-    if (!e.persisted) return;
-    var splash = document.querySelector('.splash');
-    splash.style.animation = 'none';
-    void splash.offsetWidth;
-    splash.style.animation = '';
-    var logo = splash.querySelector('img');
-    logo.style.animation = 'none';
-    void logo.offsetWidth;
-    logo.style.animation = '';
-  });
-</script>
 <script>
   var btn = document.getElementById('themeToggle');
   var root = document.documentElement;

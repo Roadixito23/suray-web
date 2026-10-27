@@ -26,11 +26,14 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-dg8hv#954l1!yrvkdn69r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+# URL publica base para canonical, Open Graph, sitemap y manifest (sin barra final).
+SITE_URL = config('SITE_URL', default='https://suray.cl').rstrip('/')
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
 # Version mostrada en el footer: fecha (DD.MM.AA) + correlativo de actualizacion (01-99).
 # Actualizar manualmente aqui cada vez que se publique un cambio en el sitio.
-SITE_VERSION = '24.10.26-11'
+SITE_VERSION = '27.10.26-01'
 
 
 # Application definition
@@ -77,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'sitio.context_processors.site_version',
+                'sitio.context_processors.site_url',
             ],
         },
     },

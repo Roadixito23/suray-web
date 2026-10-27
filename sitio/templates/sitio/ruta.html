@@ -1,7 +1,20 @@
 {% extends "sitio/base.html" %}
 {% load static %}
 
-{% block title %}Ruta | Buses Suray{% endblock %}
+{% block title %}Ruta 240 Puerto Aysén – Coyhaique y terminales | Buses Suray{% endblock %}
+
+{% block og_title %}Ruta 240 Puerto Aysén – Coyhaique y terminales | Buses Suray{% endblock %}
+{% block twitter_title %}Ruta 240 Puerto Aysén – Coyhaique y terminales | Buses Suray{% endblock %}
+
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+  {"@type": "ListItem", "position": 1, "name": "Inicio", "item": "{{ site_url }}/"},
+  {"@type": "ListItem", "position": 2, "name": "Ruta", "item": "{{ site_url }}{% url 'sitio:ruta' %}"}
+]}
+</script>
+
+{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
