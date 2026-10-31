@@ -1,5 +1,9 @@
   {% include "sitio/_avisos_zona.html" with zona=avisos_arriba %}
 
+  {% if sin_recorridos_hoy %}
+  <div class="no-service-banner" role="alert">NO HAY RECORRIDOS HOY</div>
+  {% endif %}
+
   <h1 class="today">{{ hoy_label }}</h1>
 
   <h2 class="board-title">Próximas salidas</h2>

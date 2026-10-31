@@ -92,6 +92,7 @@ def _contexto_inicio():
 
     return {
         "hoy_label": hoy_label, "salidas": salidas,
+        "sin_recorridos_hoy": bool(feriado_hoy and feriado_hoy.sin_servicio),
         "avisos_arriba": zonas["arriba"], "avisos_medio": zonas["medio"], "avisos_boton": zonas["boton"],
     }
 
