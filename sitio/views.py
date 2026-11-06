@@ -139,7 +139,8 @@ def vivo_fragmento(request, nombre):
     if nombre not in vivo.PARCIALES:
         raise Http404
     html, etag = vivo.fragmento(nombre)
-    if request.headers.get("If-None-Match") == etag:
+    # GZipMiddleware vuelve debil el ETag ("W/...") al comprimir: se compara sin ese prefijo.
+    if request.headers.get("If-None-Match", "").removeprefix("W/") == etag:
         respuesta = HttpResponseNotModified()
     else:
         respuesta = HttpResponse(html)

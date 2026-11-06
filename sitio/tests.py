@@ -488,6 +488,17 @@ class VivoTests(TestCase):
         self.assertEqual(r.status_code, 304)
         self.assertEqual(r.content, b'')
 
+    def test_if_none_match_devuelve_304_con_gzip(self):
+        # GZipMiddleware convierte el ETag en debil ("W/..."); el navegador lo devuelve tal cual.
+        r1 = self.client.get('/vivo/horarios/', headers={'Accept-Encoding': 'gzip'})
+        etag = r1['ETag']
+        r2 = self.client.get('/vivo/horarios/', headers={'If-None-Match': etag, 'Accept-Encoding': 'gzip'})
+        self.assertEqual(r2.status_code, 304)
+
+    def test_html_se_comprime_con_gzip(self):
+        r = self.client.get('/', headers={'Accept-Encoding': 'gzip'})
+        self.assertEqual(r['Content-Encoding'], 'gzip')
+
     def test_la_pagina_completa_trae_el_mismo_etag_que_el_fragmento(self):
         self.crear(8, 0)
         from django.utils.html import escape

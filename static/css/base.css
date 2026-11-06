@@ -75,7 +75,8 @@ p { margin: 0 0 1rem; max-width: 60ch; }
   54%  { opacity: 0; }
   100% { opacity: 0; }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), (max-width: 720px), (update: slow) {
+  /* Fondo estatico (una sola foto, sin animacion continua) en celular, pantallas lentas o con movimiento reducido: ahorra GPU/bateria y una descarga. */
   .page-body::before { animation: none; opacity: var(--foto-opacidad); }
   .page-body::after { display: none; }
 }

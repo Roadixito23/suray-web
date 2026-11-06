@@ -33,7 +33,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 
 # Version mostrada en el footer: fecha (DD.MM.AA) + correlativo de actualizacion (01-99).
 # Actualizar manualmente aqui cada vez que se publique un cambio en el sitio.
-SITE_VERSION = '27.10.26-02'
+SITE_VERSION = '06.11.26-01'
 
 
 # Application definition
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

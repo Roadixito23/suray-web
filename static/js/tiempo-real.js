@@ -116,7 +116,7 @@
           if (version && propia && version !== propia && recargarUnaVez(ventana, version)) { return null; }
           if (r.status === 304) { return null; }
           if (!r.ok) { throw new Error('HTTP ' + r.status); }
-          return r.text().then(function (html) { return { html: html, etag: r.headers.get('ETag') }; });
+          return r.text().then(function (html) { return { html: html, etag: (r.headers.get('ETag') || '').replace(/^W\//, '') }; });
         })
         .then(function (nuevo) {
           fallos = 0;
